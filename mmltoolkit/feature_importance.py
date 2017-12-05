@@ -7,7 +7,8 @@ import numpy as np
 
 #------------------------------------------------------------------------------------------
 def fi_print_latex(sorted_feature_names, sorted_coeffs, name="", num_to_print='all'):
-    """helper function to print a LaTeX table of feature importances in a pretty format
+    """
+        helper function to print a LaTeX table of feature importances in a pretty format
         args:
             sorted_feature_names : list of feature names
             sorted_coeffs : list of importance values

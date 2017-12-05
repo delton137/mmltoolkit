@@ -14,8 +14,8 @@ def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=Tr
     if (verbose):
         print(name+"best params:")
         print(GSmodel.best_params_)
-        #print(scoring+":")
-        #print(-1*GSmodel.best_score_)
+        print(str(scoring)+":")
+        print(-1*GSmodel.best_score_)
 
     return  GSmodel.best_estimator_
 
@@ -25,22 +25,22 @@ def mean_absolute_percentage_error(y_true, y_pred):
 def mean_absolute_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred)))
 
-def R2CV(y_true, y_pred):
-    mean_y_true = np.mean(y)
-    #mean_y_true = np.mean(y_true)
-    return 1.0 - np.mean((y_true - y_pred)**2)/np.mean((y_true-mean_y_true)**2)
-
 def r2Pearson(y_true, y_pred):
     mean_y_true = np.mean(y_true)
     mean_y_pred = np.mean(y_pred)
-    numer = 0
-    denom1 = 0
-    denom2 = 0
+    numer = 0.0
+    denom1 = 0.0
+    denom2 = 0.0
     for i in range(len(y_true)):
         numer += (y_true[i] - mean_y_true)*(y_pred[i] - mean_y_pred)
         denom1 += (y_true[i] - mean_y_true)**2
         denom2 += (y_pred[i] - mean_y_pred)**2
-    return  (numer/np.sqrt(denom1*denom2))**2
+    return  (numer/np.sqrt(denom1*denom2+0.000000001))**2
+
+def R2CV(y_true, y_pred):
+    mean_y_true = np.mean(y)
+    #mean_y_true = np.mean(y_true)
+    return 1.0 - np.mean((y_true - y_pred)**2)/np.mean((y_true-mean_y_true)**2)
 
 def get_scorers_dict():
     """Generate a dictionary of scoring methods that is useful for use with cross_validate()
@@ -50,15 +50,12 @@ def get_scorers_dict():
 
     MAPE_scorer = make_scorer(mean_absolute_percentage_error, greater_is_better=False)
 
-    R2CV_scorer = make_scorer(R2CV, greater_is_better=True)
-
     r2Pearson_scorer = make_scorer(r2Pearson, greater_is_better=True)
 
     scorers_dict = {'abs_err' : 'neg_mean_absolute_error',
-                    'RMSE' : 'mean_squared_error',
+                    'RMSE' : 'neg_mean_squared_error',
                     'R2' : 'r2',
                     'r2P' : r2Pearson_scorer,
-                    'R2CV': R2CV_scorer,
                     'MAPE' : MAPE_scorer}
 
     return scorers_dict

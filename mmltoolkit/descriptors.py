@@ -88,7 +88,7 @@ def modified_oxy_balance(mol):
 
     OB = oxygen_balance_100(mol)
 
-    #correction = 100*(1.0*n_O2 + 1.8*n_O2 + 2.2*n_O3)/n_atoms
+    correction = 100*(1.0*n_O2 + 1.8*n_O2 + 2.2*n_O3)/n_atoms
 
     #if (OB > 0 ):
     #    mod_OB = OB - correction

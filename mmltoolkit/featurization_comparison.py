@@ -4,13 +4,13 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold, ShuffleSplit
 from .CV_tools import grid_search, get_scorers_dict
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import Ridge, Lasso, LinearRegression
+from sklearn.linear_model import Ridge, Lasso, LinearRegression, BayesianRidge
 
 
-
-def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuffle=True),
+#----------------------------------------------------------------------------
+def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=20,shuffle=True),
                                 make_plots=False, save_plot=False, verbose=False, target_prop_name='',
-                                make_combined_plot=False):
+                                units = '', make_combined_plot=False):
     ''' test a bunch of models and print out a sorted list of CV accuracies
         inputs:
             x: training data features, numpy array or Pandas dataframe
@@ -53,10 +53,11 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
                          "gamma": np.logspace(-15, -6, 10),
                         "kernel" : ['rbf','laplacian']}
         #model = grid_search(x, y, Lasso(), cv=cv, param_grid={"alpha": grid }, verbose=True)
-        model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
+        #model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
         #model = KernelRidge(**{'alpha': 9.8849590466255858e-11, 'gamma': 1.7433288221999873e-11, 'kernel': 'rbf'})
         #model = grid_search(x, y,SVR(), param_grid={"C": np.logspace(-1, 3, 40), "epsilon": np.logspace(-2, 1, 40)}, name = "SVR", verbose=True, cv=cv)
         #model = grid_search(x, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(10, 50,5).astype('int')}, verbose=True)
+        model = BayesianRidge()
 
         scorers_dict = get_scorers_dict()
 
@@ -87,7 +88,7 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             plt.xlabel('Actual '+target_prop_name, fontsize=19)
             plt.ylabel('Predicted '+target_prop_name, fontsize=19)
             #label = '\n mean % error: '+str(mean_MAPE[name])
-            label=name+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+"kJ/cc\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_r2Ptest[name])
+            label=name+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_r2Ptest[name])
             plt.text(.05, .72, label, fontsize = 21, transform=ax.transAxes)
 
             kf = cv

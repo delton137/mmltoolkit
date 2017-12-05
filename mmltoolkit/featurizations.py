@@ -4,6 +4,224 @@ from rdkit import Chem
 from rdkit.Chem.rdmolops import Get3DDistanceMatrix, GetAdjacencyMatrix, GetDistanceMatrix
 from rdkit.Chem.Graphs import CharacteristicPolynomial
 
+atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9 }
+
+
+#----------------------------------------------------------------------------
+def bag_of_bonds(filename_list, verbose=False):
+    """
+    REF:
+        Hansen, et al., The Journal of Physical Chemistry Letters 2015 6 (12), 2326-2331
+        DOI: 10.1021/acs.jpclett.5b00831, URL: http://pubs.acs.org/doi/abs/10.1021/acs.jpclett.5b00831
+    Args:
+        filename_list : a list containing strings for all of the .xyz input filenames
+    Returns:
+        feature_names : a (long) list of strings describing which bag each element of the feature vector is part of
+        X_LBoB : a NumPy array containing the feature vectors of shape (num_mols, num_bond_types)
+    """
+    import copy
+
+    num_mols = len(filename_list)
+
+    #------- initialize empty dictionary for storing each bag as a list -----
+    atom_types = ['C', 'N', 'O', 'F', 'H']
+    num_atom_types = len(atom_types)
+
+    empty_BoB_dict = {}
+    for atom_type in atom_types:
+        empty_BoB_dict[atom_type] = [] #initialize empty list
+
+    for i in range(num_atom_types):
+        for j in range(i,num_atom_types):
+            empty_BoB_dict[atom_types[i]+atom_types[j]] = [] #initialize empty list
+
+    #------------- fill dicts in dict list ------------------------------------
+    BoB_dict_list = []
+    if (verbose): print("creating intial BoBs")
+
+    for m, filename in enumerate(filename_list):
+        xyzfile = open(filename, 'r')
+        num_atoms_file = int(xyzfile.readline())
+        xyzfile.close()
+        Cmat = np.zeros((num_atoms_file,num_atoms_file))
+        chargearray = np.zeros((num_atoms_file, 1))
+        xyzmatrix = np.loadtxt(filename, skiprows=2, usecols=[1,2,3])
+        atom_symbols = np.loadtxt(filename, skiprows=2, dtype=bytes, usecols=[0])
+        atom_symbols = [symbol.decode('utf-8') for symbol in atom_symbols]
+        chargearray = [atom_num_dict[symbol] for symbol in atom_symbols]
+
+        BoB_dict = copy.deepcopy(empty_BoB_dict)
+
+        #------- populate BoB dict ------------------------------------------
+        for i in range(num_atoms_file):
+            for j in range(i, num_atoms_file):
+                if i == j:
+                    BoB_dict[atom_symbols[i]] += [0.5*chargearray[i]**2.4] #concactenate to list
+                else:
+                    dict_key = atom_symbols[i]+atom_symbols[j]
+                    dist=np.linalg.norm(xyzmatrix[i,:] - xyzmatrix[j,:])
+                    CM_term = chargearray[i]*chargearray[j]/dist
+                    try:
+                        BoB_dict[dict_key] += [CM_term] #concactenate to list
+                    except KeyError:
+                        dict_key = atom_symbols[j]+atom_symbols[i]
+                        BoB_dict[dict_key] += [CM_term] #concactenate to list
+
+        BoB_dict_list += [BoB_dict]
+
+
+    #------- tricky processing stage - zero pad all bags so they all have the same length
+    #------- and then cocatenate all bags into a feature vector for each molecule
+
+    #For each key in the dict, zero pad the bags, and do this for all molecules
+    #also sum these up to get the total length of the final feature vector
+    feature_vect_length = 0
+
+    if (verbose): print("finding max length of each bag and padding")
+
+    for key in BoB_dict_list[0].keys():
+        max_length = 0
+        #find max bag length
+        for i in range(num_mols):
+            length = len(BoB_dict_list[i][key])
+            if (length > max_length):
+                max_length = length
+
+        if (verbose): print("max length of ", key, "is", max_length)
+        #zero pad each bag
+        for i in range(num_mols):
+            pad_width = max_length - len(BoB_dict_list[i][key])
+            BoB_dict_list[i][key] = BoB_dict_list[i][key]+[0]*pad_width
+        feature_vect_length += max_length
+
+    #initialize Numpy feature vector array
+    X_BoB = np.zeros((num_mols, feature_vect_length))
+
+    #concatenation of all bags
+    if (verbose): print("concatenating the bags")
+
+    for m in range(num_mols):
+        featvec = []
+        for key in BoB_dict_list[m].keys():
+            featvec += sorted(BoB_dict_list[m][key], reverse=True) #Sort (finally)
+        X_BoB[m,:] = np.array(featvec)
+
+    #concatenate feature names
+    feature_names = []
+    for key in BoB_dict_list[0].keys():
+        for element in BoB_dict_list[0][key]:
+            feature_names += [key]
+
+    return feature_names, X_BoB
+
+
+#----------------------------------------------------------------------------
+def summed_bag_of_bonds(filename):
+    """
+        Based on   Hansen, et al., The Journal of Physical Chemistry Letters 2015 6 (12), 2326-2331
+        DOI: 10.1021/acs.jpclett.5b00831, URL: http://pubs.acs.org/doi/abs/10.1021/acs.jpclett.5b00831
+        However, the Coulomb matrix terms for each atom pair (C-C, C-N, C-O, etc) are **summed** together.
+        The diagonal terms of the Coulomb matrix are concatenated with the resulting vector.
+        So the resulting feature vector for each molecule is a vector of length
+        (num_atom_pair_types + num_atom_types). This is different than the original BoB, which maintains each
+        CM entry in the feature vector.
+    Args:
+        filename : (string) the .xyz input filename for the molecule
+    Returns:
+        (feature_names, BoB_list) as lists
+    """
+    xyzfile = open(filename, 'r')
+    num_atoms_file = int(xyzfile.readline())
+    xyzfile.close()
+    Cmat = np.zeros((num_atoms_file,num_atoms_file))
+    chargearray = np.zeros((num_atoms_file, 1))
+    xyzmatrix = np.loadtxt(filename, skiprows=2, usecols=[1,2,3])
+    atom_symbols = np.loadtxt(filename, skiprows=2, dtype=bytes, usecols=[0])
+    atom_symbols = [symbol.decode('utf-8') for symbol in atom_symbols]
+    chargearray = [atom_num_dict[symbol] for symbol in atom_symbols]
+
+    #------- initialize dictionary for storing each bag ---------
+    atom_types = ['C', 'N', 'O', 'F', 'H']
+    num_atom_types = len(atom_types)
+
+    BoB_dict = {}
+    for atom_type in atom_types:
+        BoB_dict[atom_type] = 0
+
+    for i in range(num_atom_types):
+        for j in range(i,num_atom_types):
+            BoB_dict[atom_types[i]+atom_types[j]] = 0
+
+    #------- populate BoB dict -----------------------------------
+    for i in range(num_atoms_file):
+        for j in range(i, num_atoms_file):
+            if i == j:
+                BoB_dict[atom_symbols[i]] += 0.5*chargearray[i]**2.4
+            else:
+                dict_key = atom_symbols[i]+atom_symbols[j]
+                dist=np.linalg.norm(xyzmatrix[i,:] - xyzmatrix[j,:])
+                CM_term = chargearray[i]*chargearray[j]/dist
+                try:
+                    BoB_dict[dict_key] += CM_term
+                except KeyError:
+                    dict_key = atom_symbols[j]+atom_symbols[i]
+                    BoB_dict[dict_key] += CM_term
+
+    #------- process into list -------------------------------------
+    feature_names = list(BoB_dict.keys())
+    BoB_list = [BoB_dict[feature] for feature in feature_names]
+
+    return feature_names, BoB_list
+
+#----------------------------------------------------------------------------
+def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
+    """
+    returns Coulomb matrix and **sorted** Coulomb matrix eigenvalues
+    Args:
+        filename : (string) the .xyz input filename for the molecule
+        padded_size : the number of atoms in the biggest molecule to be considered (same as padded eigenvalue vector length)
+    Returns:
+        (Eigenvalues vector, Coulomb matrix vector) as Numpy arrays
+    """
+    xyzfile = open(filename, 'r')
+    num_atoms_file = int(xyzfile.readline())
+    xyzfile.close()
+    Cmat = np.zeros((num_atoms_file,num_atoms_file))
+    chargearray = np.zeros((num_atoms_file, 1))
+    xyzmatrix = np.loadtxt(filename, skiprows=2, usecols=[1,2,3])
+    atom_symbols = np.loadtxt(filename, skiprows=2, dtype=bytes, usecols=[0])
+    atom_symbols = [symbol.decode('utf-8') for symbol in atom_symbols]
+    chargearray = [atom_num_dict[symbol] for symbol in atom_symbols]
+
+    for i in range(num_atoms_file):
+        for j in range(num_atoms_file):
+            if i == j:
+                Cmat[i,j]=0.5*chargearray[i]**2.4   # Diagonal term described by Potential energy of isolated atom
+            else:
+                dist=np.linalg.norm(xyzmatrix[i,:] - xyzmatrix[j,:])
+                Cmat[i,j]=chargearray[i]*chargearray[j]/dist   #Pair-wise repulsion
+
+    Cmat_eigenvalues = np.linalg.eigvals(Cmat)
+    #print(Cmat_eigenvalues)
+    if (sort): Cmat_eigenvalues = sorted(Cmat_eigenvalues, reverse=True) #sort
+
+    Cmat_as_vec = []
+    for i in range(num_atoms_file):
+        for j in range(num_atoms_file):
+            if (j>=i):
+                Cmat_as_vec += [Cmat[i,j]]
+
+    pad_width = (padded_size**2 - padded_size)//2 + padded_size - ((num_atoms_file**2 - num_atoms_file)//2 + num_atoms_file)
+    Cmat_as_vec = Cmat_as_vec + [0]*pad_width
+
+    Cmat_as_vec = np.array(Cmat_as_vec)
+
+    pad_width = padded_size - num_atoms_file
+    Cmat_eigenvalues = np.pad(Cmat_eigenvalues, ((0, pad_width)), mode='constant')
+
+    return Cmat_eigenvalues, Cmat_as_vec
+
+
 
 #----------------------------------------------------------------------------
 def literal_bag_of_bonds(mol_list):
