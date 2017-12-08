@@ -1,3 +1,8 @@
+"""
+    descriptors based on stoichiometry and functional groups
+    Daniel C. Elton
+    License : MIT
+"""
 from rdkit import Chem
 from rdkit.Chem import Descriptors, AddHs
 
@@ -74,6 +79,43 @@ def oxygen_balance_100(mol):
     n_H = get_num_atom(mol, 1)
     n_atoms = mol.GetNumAtoms()
     return 100*(n_O - 2*n_C - n_H/2)/n_atoms
+
+def return_combined_nums(mol):
+    return custom_descriptor_set(mol)
+
+def custom_descriptor_set(mol):
+    n_a = mol.GetNumAtoms()
+    n_C = get_num_atom(mol, 'C')
+    n_N = get_num_atom(mol, 'N')
+    n_O = get_num_atom(mol, 'O')
+    n_H = get_num_atom(mol, 'H')
+    n_F = get_num_atom(mol, 'F')
+    n_O1 = get_num_with_neighs(mol, 'O', {'N': 1})
+    n_O2 = get_num_with_neighs(mol, 'O', {'N': 1,'C': 1})
+    n_O3 = get_num_with_neighs(mol, 'O', {'C': 1})
+    n_O4 = get_num_with_neighs(mol, 'O', {'C': 1,'H': 1})
+
+    if (n_C == 0):
+        NCratio = n_N/0.00001
+    else:
+        NCratio = n_N/n_C
+
+
+    return [oxygen_balance_100(mol), n_C, n_N, n_O1, n_O2, n_O3, n_O4, n_H, n_F, NCratio,
+                get_num_with_neighs(mol, 'N', {'O': 2, 'C': 1}) ,  #CNO2
+                get_num_with_neighs(mol, 'N', {'O': 2, 'N': 1}) ,  #NNO2
+                get_num_with_neighs(mol, 'N', {'O': 2})         ,  #ONO
+                get_num_with_neighs(mol, 'N', {'O': 3})         ,  #ONO2
+                get_num_with_neighs(mol, 'N', {'N': 1, 'C': 1}) ,  #CNN
+                get_num_with_neighs(mol, 'N', {'N': 2})         ,  #NNN
+                get_num_with_neighs(mol, 'N', {'C': 1,'O': 1})  ,  #CNO
+                get_num_with_neighs(mol, 'N', {'C': 1,'H': 2})  ,  #CNH2
+                get_num_with_neighs(mol, 'N', {'C': 2,'O': 1})  ,  #CN(O)C
+                get_num_with_neighs(mol, 'F', {'C': 1})         ,  #CF
+                get_num_with_neighs(mol, 'N', {'C': 1, 'N':2})     #CNF
+                #n_C/n_a, n_N/n_a, n_O/n_a, n_H/n_a
+           ]
+
 
 
 def modified_oxy_balance(mol):

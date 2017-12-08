@@ -33,8 +33,8 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
     subplot_index = 1
 
     num_models = len(model_dict.keys())
-    num_fig_rows = 4
-    num_fig_columns = np.ceil((num_models+1)/num_fig_rows)
+    num_fig_rows = 2
+    num_fig_columns = np.ceil((num_models)/num_fig_rows)
 
     if (make_combined_plot | make_plots):
         plt.figure(figsize=(6*num_fig_columns,6*num_fig_rows))
@@ -54,12 +54,16 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
         mean_R2train[name] = scores_dict['train_R2'].mean()
         mean_r2Ptrain[name] = scores_dict['train_r2P'].mean()
         mean_r2Ptest[name] = scores_dict['test_r2P'].mean()
+        model_dict[name] = model
+
+    sorted_names = sorted(mean_abs_err, key=mean_abs_err.__getitem__, reverse=False)
 
 
-        if (make_plots):
-            ax = plt.subplot(num_fig_rows,num_fig_columns, subplot_index)
+    if (make_plots):
+        for name in sorted_names:
+            model = model_dict[name]
+            ax = plt.subplot(num_fig_rows, num_fig_columns, subplot_index)
             subplot_index += 1
-            #plt.title(name,fontsize=20)
             plt.xlabel('Actual '+target_prop_name, fontsize=19)
             plt.ylabel('Predicted '+target_prop_name, fontsize=19)
             #label = '\n mean % error: '+str(mean_MAPE[name])
@@ -67,44 +71,31 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
             plt.text(.05, .72, label, fontsize = 21, transform=ax.transAxes)
 
             kf = cv
-
-            if (make_combined_plot):
-                for k, (train, test) in enumerate(kf.split(x,y)):
-                    model.fit(x[train], y[train])
-                    y_pred_test = model.predict(x[test])
-                    y_pred_train = model.predict(x[train])
-                    plt.scatter(y[test],y_pred_test, label = 'Test', c='blue',alpha = 0.7)
-                    plt.legend(loc=4)
-            else:
-                train, test = kf.split(x).__next__() #first in the generator
-                model.fit(x[train], y[train])
-                y_pred_test = model.predict(x[test])
-                y_pred_train = model.predict(x[train])
-                plt.scatter(y[test],y_pred_test, label = 'Test', c='blue',alpha = 0.7)
-                plt.scatter(y[train],y_pred_train, label = 'Train', c='lightgreen',alpha = 0.7)
-                plt.legend(loc=4, fontsize=21)
+            train, test = kf.split(x).__next__() #first in the generator
+            model.fit(x[train], y[train])
+            y_pred_test = model.predict(x[test])
+            y_pred_train = model.predict(x[train])
+            plt.scatter(y[test],y_pred_test, label = 'Test', c='blue',alpha = 0.7)
+            plt.scatter(y[train],y_pred_train, label = 'Train', c='lightgreen',alpha = 0.7)
+            plt.legend(loc=4, fontsize=21)
 
             #square axes
-            maxy = max(y) + .05*max(y)
-            miny = min(y) - .05*max(y)
-            plt.plot([miny ,maxy],[miny,  maxy],'k-')
-            plt.xlim([miny , maxy])
-            plt.ylim([miny , maxy])
+            maxy = 1.05*max(y)
+            plt.plot([0,maxy],[0, maxy],'k-')
             #reference line
-
+            plt.xlim([0,maxy])
+            plt.ylim([0,maxy])
 
     plt.tight_layout()
     if (save_plot): plt.savefig('model_comparison.pdf')
     plt.show()
 
-    sorted_names = sorted(mean_abs_err, key=mean_abs_err.__getitem__, reverse=False)
-
     print("\\begin{tabular}{c c c c c c c c c}")
-    print("                   name          & MAE_{\\ff{train}}   &  MAE_{\\ff{test}}  & MAPE_{\\ff{test}} & RMSE_{\\ff{test}}  & R^2_{\\ff{train}} &  R^2_{\\ff{test}} &  r_{\\ff{train}} & r_{\\ff{test}}          \\\\  ")
+    print("                   name          & MAE$_{\\ff{train}}$   &  MAE$_{\\ff{test}}$  & MAPE$_{\\ff{test}}$ & RMSE$_{\\ff{test}}$  & $R^2_{\\ff{train}}$ &  $R^2 _{\\ff{test}} $&  $r_{\\ff{train}}$ & $r_{\\ff{test}} $         \\\\  ")
     print("\\hline")
     for i in range(len(sorted_names)):
         name = sorted_names[i]
-        print("%30s &   %5.2f \\pm %3.2f & %5.2f \\pm %3.2f & %5.2f &  %5.3f &  %5.2f & %5.2f & %5.2f & %5.2f  \\\\" % (name,
+        print("%30s &   %5.2f $\\pm$ %3.2f & %5.2f $\\pm$ %3.2f & %5.2f &  %5.3f &  %5.2f & %5.2f & %5.2f & %5.2f  \\\\" % (name,
                                                         mean_abs_err_train[name],
                                                         std_abs_err_train[name],
                                                         mean_abs_err[name],

@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge, Lasso, LinearRegression, BayesianRidge
 
 
 #----------------------------------------------------------------------------
-def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=20,shuffle=True),
+def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuffle=True),
                                 make_plots=False, save_plot=False, verbose=False, target_prop_name='',
                                 units = '', make_combined_plot=False):
     ''' test a bunch of models and print out a sorted list of CV accuracies
@@ -53,11 +53,11 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=20,shu
                          "gamma": np.logspace(-15, -6, 10),
                         "kernel" : ['rbf','laplacian']}
         #model = grid_search(x, y, Lasso(), cv=cv, param_grid={"alpha": grid }, verbose=True)
-        #model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
+        model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
         #model = KernelRidge(**{'alpha': 9.8849590466255858e-11, 'gamma': 1.7433288221999873e-11, 'kernel': 'rbf'})
         #model = grid_search(x, y,SVR(), param_grid={"C": np.logspace(-1, 3, 40), "epsilon": np.logspace(-2, 1, 40)}, name = "SVR", verbose=True, cv=cv)
         #model = grid_search(x, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(10, 50,5).astype('int')}, verbose=True)
-        model = BayesianRidge()
+        #model = BayesianRidge()
 
         scorers_dict = get_scorers_dict()
 
@@ -117,7 +117,7 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=20,shu
     print("\\hline")
     for i in range(len(sorted_names)):
         name = sorted_names[i]
-        print("%30s &   %5.3f \\pm %3.2f & %5.3f \\pm %3.2f & %5.2f &  %5.3f &  %5.2f & %5.2f & %5.2f & %5.2f  \\\\" % (name,
+        print("%30s &   %5.3f $\\pm$ %3.2f & %5.3f $\\pm$ %3.2f & %5.2f &  %5.3f &  %5.2f & %5.2f & %5.2f & %5.2f  \\\\" % (name,
                                                         mean_abs_err_train[name],
                                                         std_abs_err_train[name],
                                                         mean_abs_err[name],

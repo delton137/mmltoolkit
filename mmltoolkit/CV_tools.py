@@ -59,3 +59,11 @@ def get_scorers_dict():
                     'MAPE' : MAPE_scorer}
 
     return scorers_dict
+
+
+def test_model_cv(model, x, y, cv=5):
+    scores = cross_val_score(model, x, y, cv=cv, n_jobs=-1, scoring='neg_mean_absolute_error')
+
+    scores = -1*scores
+
+    return scores.mean()

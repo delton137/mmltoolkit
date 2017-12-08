@@ -7,6 +7,7 @@ from rdkit.Chem.Graphs import CharacteristicPolynomial
 atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9 }
 
 
+
 #----------------------------------------------------------------------------
 def bag_of_bonds(filename_list, verbose=False):
     """
@@ -222,9 +223,11 @@ def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
     return Cmat_eigenvalues, Cmat_as_vec
 
 
+def literal_bag_of_bonds(mol_list):
+    return sum_over_bonds(mol_list)
 
 #----------------------------------------------------------------------------
-def literal_bag_of_bonds(mol_list):
+def sum_over_bonds(mol_list):
     '''
         Note: Bond types are labeled according convention where the atom of the left is alphabetically less than
         the atom on the right. For instance, 'C=O' and 'O=C' bonds are lumped together under 'C=O', and NOT 'O=C'.
