@@ -37,7 +37,8 @@ def fi_print_latex(sorted_feature_names, sorted_coeffs, name="", num_to_print='a
 #------------------------------------------------------------------------------------------
 def mean_decrease_accuracy(x, y, feature_names, model=RandomForestRegressor(n_estimators = 50),
                           num_to_print='all', print_latex=True):
-    """ Feature importance by mean decrease accuracy.
+    """
+        Feature importance by mean decrease accuracy.
         Proposed for random forrests in Breiman, L. Machine Learning (2001) 45: 5. https://doi.org/10.1023/A:1010933404324
         Measures decrease in accuracy values when a given feature is randomly permuted in the dataset.
          If the decrease is low, then the feature is not important, and vice-versa.
@@ -61,7 +62,6 @@ def mean_decrease_accuracy(x, y, feature_names, model=RandomForestRegressor(n_es
     X = boston["data"]
     Y = boston["target"]
 
-    rf =
     scores = defaultdict(list)
 
     #crossvalidate the scores on a number of different random splits of the data
@@ -75,9 +75,8 @@ def mean_decrease_accuracy(x, y, feature_names, model=RandomForestRegressor(n_es
             np.random.shuffle(X_t[:, i])
             shuff_acc = r2_score(Y_test, rf.predict(X_t))
             scores[names[i]].append((acc-shuff_acc)/acc)
-    print "Features sorted by their score:"
-    print sorted([(round(np.mean(score), 4), feat) for
-                  feat, score in scores.items()], reverse=True)
+    print( sorted([(round(np.mean(score), 4), feat) for
+                  feat, score in scores.items()], reverse=True) )
 
     #sort dictionary
     sorted_feature_names = sorted(f_imps, key=f_imps.__getitem__, reverse=True)

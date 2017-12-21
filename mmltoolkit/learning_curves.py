@@ -3,11 +3,14 @@ from sklearn.model_selection import learning_curve
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from sklearn.model_selection import KFold, ShuffleSplit
-
+from scipy.optimize import curve_fit
+import matplotlib.ticker as mticker
+from matplotlib.ticker import FormatStrFormatter
 
 #----------------------------------------------------------------------------
-def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20),
-                        ylim=None, cv=KFold(n_splits=5,shuffle=True), title='', n_jobs=-1):
+def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20), fit_exponential=False,
+                        ylim=None, cv=KFold(n_splits=5,shuffle=True), title='', include_title=False,
+                        units='', n_jobs=-1):
     """
     Generate a simple plot of the test and training learning curve.
     Adapted from code from scikitlearn.org
@@ -24,11 +27,11 @@ def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20),
 
     plt.figure(figsize=(10,9))
     plt.clf()
-    #plt.title(title, fontsize=25)
+    if (include_title): plt.title(title, fontsize=25)
     if ylim is not None:
         plt.ylim(*ylim)
     plt.xlabel("# training examples", fontsize=22)
-    plt.ylabel("Mean absolute error (kJ/cc)", fontsize=22)
+    plt.ylabel("Mean absolute error "+units, fontsize=22)
     train_sizes, train_scores, test_scores = learning_curve(
         model, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes, scoring='neg_mean_absolute_error')
     train_scores = -1*train_scores
@@ -54,12 +57,31 @@ def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20),
     plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
              label="test score")
 
-    plt.legend(loc="best", fontsize=16)
+    if (fit_exponential):
+        def scaling_fn(x, A=1, alpha=1.5):
+            return A*np.array(x)**(-1*alpha)
+
+        if (fit_exponential):
+            p_fit, p_cov = curve_fit(scaling_fn, train_sizes, test_scores_mean, p0=[1, 1.5])
+
+        x_fit = np.logspace(np.log10(min(train_sizes)), 3.01, 100)
+        print(p_fit)
+
+    y_fit = scaling_fn(list(x_fit), A=p_fit[0], alpha=p_fit[1])
+
+    label_string = 'y = %3.2f x^(-%3.2f)' % (p_fit[0], p_fit[1])
+    plt.plot(x_fit, y_fit, '--', color="b", label=label_string )
+
+    plt.legend(loc="best", fontsize=22, framealpha=1)
     plt.yscale('log')
     plt.xscale('log')
 
     ax = plt.gca()
     ax.xaxis.set_major_formatter(ScalarFormatter())
+    ax.yaxis.set_major_formatter(ScalarFormatter())
+    ax.yaxis.set_minor_formatter(FormatStrFormatter("%3.2f"))
+
+
     #ax.loglog()
 
     #ax.set_xticklabels(x_ticks, rotation=0, fontsize=10)
@@ -70,5 +92,6 @@ def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20),
     ax.yaxis.set_tick_params(labelsize=14)
     plt.tick_params(length=7.0)
     plt.tick_params(which='minor', length=5.0)
+
 
     return plt

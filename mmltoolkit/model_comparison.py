@@ -9,7 +9,7 @@ from .CV_tools import *
 
 #------------------- mdoel comparison function ---------------------------------
 def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), make_plots=False, save_plot=False,
-                         target_prop_name='', units = '', verbose=False, make_combined_plot=False):
+                         target_prop_name='', units = '', verbose=False, make_combined_plot=False, num_fig_rows = 2):
     ''' test a bunch of models and print out a sorted list of CV accuracies
         inputs:
             x: training data features, numpy array or Pandas dataframe
@@ -33,7 +33,6 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
     subplot_index = 1
 
     num_models = len(model_dict.keys())
-    num_fig_rows = 2
     num_fig_columns = np.ceil((num_models)/num_fig_rows)
 
     if (make_combined_plot | make_plots):
@@ -81,10 +80,10 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
 
             #square axes
             maxy = 1.05*max(y)
-            plt.plot([0,maxy],[0, maxy],'k-')
             #reference line
-            plt.xlim([0,maxy])
-            plt.ylim([0,maxy])
+            plt.plot([0,maxy],[0, maxy],'k-')
+            #plt.xlim([0,maxy])
+            #plt.ylim([0,maxy])
 
     plt.tight_layout()
     if (save_plot): plt.savefig('model_comparison.pdf')

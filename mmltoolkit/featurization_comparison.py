@@ -101,11 +101,12 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             plt.legend(loc=4, fontsize=21)
 
             #square axes
-            maxy = 1.05*max(y)
-            plt.plot([0,maxy],[0, maxy],'k-')
+            maxy = 1.05*max([max(y_pred_train), max(y_pred_test), max(y)])
+            miny = .95*min([min(y_pred_train), min(y_pred_test), min(y)])
             #reference line
-            plt.xlim([0,maxy])
-            plt.ylim([0,maxy])
+            plt.plot([0,maxy],[0, maxy],'k-')
+            plt.xlim([miny,maxy])
+            plt.ylim([miny,maxy])
 
     plt.tight_layout()
     if (save_plot): plt.savefig('model_comparison.pdf')

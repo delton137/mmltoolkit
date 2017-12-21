@@ -1,6 +1,6 @@
-from sklearn.model_selection import KFold, ShuffleSplit
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_validate
 from sklearn.metrics import make_scorer
+from sklearn.kernel_ridge import KernelRidge
 import numpy as np
 
 
@@ -39,9 +39,13 @@ def r2Pearson(y_true, y_pred):
 
 def R2CV(y_true, y_pred):
     mean_y_true = np.mean(y)
-    #mean_y_true = np.mean(y_true)
     return 1.0 - np.mean((y_true - y_pred)**2)/np.mean((y_true-mean_y_true)**2)
 
+def R2(y_true, y_pred):
+    mean_y_true = np.mean(y_true)
+    return 1.0 - np.mean((y_true - y_pred)**2)/np.mean((y_true-mean_y_true)**2)
+
+#--------------------------------------------------------------------
 def get_scorers_dict():
     """Generate a dictionary of scoring methods that is useful for use with cross_validate()
         returns:
@@ -60,10 +64,26 @@ def get_scorers_dict():
 
     return scorers_dict
 
-
-def test_model_cv(model, x, y, cv=5):
+#--------------------------------------------------------------------
+def test_model_cv(model, x, y, cv=KFold(n_splits=5,shuffle=True)):
     scores = cross_val_score(model, x, y, cv=cv, n_jobs=-1, scoring='neg_mean_absolute_error')
 
     scores = -1*scores
 
     return scores.mean()
+
+#--------------------------------------------------------------------
+def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=True, verbose=False):
+    if (do_grid_search):
+        KR_grid = {"alpha": np.logspace(-16, -2, 10),
+                   "gamma": np.logspace(-15, -6, 10),
+                   "kernel" : ['rbf','laplacian']}
+
+        model = grid_search(X, y, KernelRidge(), param_grid=KR_grid, verbose=verbose)
+    else:
+        model = KernelRidge()
+
+    scorers_dict = get_scorers_dict()
+    scores_dict = cross_validate(model, X, y, cv=cv, n_jobs=-1, scoring=scorers_dict, return_train_score=True)
+
+    return scores_dict
