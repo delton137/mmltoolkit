@@ -1,4 +1,4 @@
-from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_validate
+from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_validate, cross_val_score
 from sklearn.metrics import make_scorer
 from sklearn.kernel_ridge import KernelRidge
 import numpy as np

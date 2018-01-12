@@ -71,7 +71,7 @@ def make_fingerprints(mols, length = 1024, verbose=False):
                     "Avalon (2006)"),
          #fingerprint(lambda x: np.append(GetAvalonFP(x, nBits=length), Descriptors.MolWt(x)),
          #           "Avalon+mol. weight"),
-         fingerprint(lambda x: GetErGFingerprint(x), "ErG (2006)"),
+         #fingerprint(lambda x: GetErGFingerprint(x), "ErG (2006)"),
          fingerprint(lambda x : RDKFingerprint(x, fpSize=length),
                      "RDKit topological (2006)")
     ]

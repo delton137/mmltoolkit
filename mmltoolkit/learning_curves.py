@@ -6,6 +6,7 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from scipy.optimize import curve_fit
 import matplotlib.ticker as mticker
 from matplotlib.ticker import FormatStrFormatter
+import matplotlib.ticker as plticker
 
 #----------------------------------------------------------------------------
 def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20), fit_exponential=False,
@@ -69,29 +70,30 @@ def plot_learning_curve(model, X, y, train_sizes=np.linspace(0.2,1,20), fit_expo
 
     y_fit = scaling_fn(list(x_fit), A=p_fit[0], alpha=p_fit[1])
 
+
     label_string = 'y = %3.2f x^(-%3.2f)' % (p_fit[0], p_fit[1])
     plt.plot(x_fit, y_fit, '--', color="b", label=label_string )
 
     plt.legend(loc="best", fontsize=22, framealpha=1)
     plt.yscale('log')
     plt.xscale('log')
-
     ax = plt.gca()
+
+    #ax.set_yticks([.15, .25, .35])
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_minor_formatter(FormatStrFormatter("%3.2f"))
-
-
+    ax.yaxis.grid(False)
     #ax.loglog()
 
     #ax.set_xticklabels(x_ticks, rotation=0, fontsize=10)
-    #ax.set_yticklabels(y_ticks, rotation=0, fontsize=10)
+    #ax.set_yticklabels(y_ticks, rotation=0, fontsize=14)
     #plt.rcParams['xtick.labelsize']=8
     #plt.rcParams['ytick.labelsize']=8
     ax.xaxis.set_tick_params(labelsize=14)
     ax.yaxis.set_tick_params(labelsize=14)
-    plt.tick_params(length=7.0)
-    plt.tick_params(which='minor', length=5.0)
+    plt.tick_params(length=8.0, labelsize=14)
+    plt.tick_params(which='minor', length=5.0, labelsize=14)
 
 
     return plt
