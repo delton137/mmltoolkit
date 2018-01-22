@@ -86,7 +86,7 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
             #plt.ylim([0,maxy])
 
     plt.tight_layout()
-    if (save_plot): plt.savefig('model_comparison.pdf')
+    if (save_plot): plt.savefig('model_comparison'+target_prop_name.strip()+'.pdf')
     plt.show()
 
     print("\\begin{tabular}{c c c c c c c c c}")

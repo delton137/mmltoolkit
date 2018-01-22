@@ -1,5 +1,7 @@
 # Molecular Machine Learning Toolkit
 
+License : MIT open source (see LICENSE file)
+
 2017 Daniel C. Elton
 
 If you use this code, please cite:
