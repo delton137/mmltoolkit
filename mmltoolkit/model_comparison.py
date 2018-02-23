@@ -80,13 +80,17 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
 
             #square axes
             maxy = 1.05*max(y)
+            #square axes
+            maxy = 1.05*max([max(y_pred_train), max(y_pred_test), max(y)])
+            miny = .95*min([min(y_pred_train), min(y_pred_test), min(y)])
+
             #reference line
-            plt.plot([0,maxy],[0, maxy],'k-')
-            #plt.xlim([0,maxy])
-            #plt.ylim([0,maxy])
+            plt.plot([miny,maxy],[miny, maxy],'k-')
+            #plt.xlim([miny,maxy])
+            #plt.ylim([miny,maxy])
 
     plt.tight_layout()
-    if (save_plot): plt.savefig('model_comparison'+target_prop_name.strip()+'.pdf')
+    if (save_plot): plt.savefig('model_comparison'+title.strip()+'.pdf')
     plt.show()
 
     print("\\begin{tabular}{c c c c c c c c c}")

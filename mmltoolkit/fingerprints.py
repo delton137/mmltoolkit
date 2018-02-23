@@ -35,7 +35,7 @@ class fingerprint():
         #st = StandardScaler()
         #self.x = st.fit_transform(self.x)
 
-def truncated_Estate_fp(mol_list):
+def truncated_Estate_featurizer(mol_list):
     return np.array([FingerprintMol(mol)[0][6:37] for mol in mol_list])
 
 def fp_Estate_ints(mol):

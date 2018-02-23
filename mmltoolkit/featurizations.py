@@ -223,11 +223,11 @@ def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
     return Cmat_eigenvalues, Cmat_as_vec
 
 
-def literal_bag_of_bonds(mol_list):
-    return sum_over_bonds(mol_list)
+def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
+    return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
 
 #----------------------------------------------------------------------------
-def sum_over_bonds(mol_list):
+def sum_over_bonds(mol_list, predefined_bond_types=[]):
     '''
         Note: Bond types are labeled according convention where the atom of the left is alphabetically less than
         the atom on the right. For instance, 'C=O' and 'O=C' bonds are lumped together under 'C=O', and NOT 'O=C'.
@@ -245,21 +245,25 @@ def sum_over_bonds(mol_list):
     empty_bond_dict = {}
     num_mols = len(mol_list)
 
-    #first pass through to enumerate all bond types in all molecules
-    for i, mol in enumerate(mol_list):
-        bonds = mol.GetBonds()
-        for bond in bonds:
-            bond_start_atom = bond.GetBeginAtom().GetSymbol()
-            bond_end_atom = bond.GetEndAtom().GetSymbol()
-            bond_type = bond.GetSmarts(allBondsExplicit=True)
-            bond_atoms = [bond_start_atom, bond_end_atom]
-            if (bond_type == ''):
-                bond_type = "-"
-            bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
-            try:
-                empty_bond_dict[bond_string] = 0
-            except KeyError:
-                empty_base_bond_dict[bond_string] = 0
+    if (len(predefined_bond_types) == 0 ):
+        #first pass through to enumerate all bond types in all molecules and set them equal to zero in the dict
+        for i, mol in enumerate(mol_list):
+            bonds = mol.GetBonds()
+            for bond in bonds:
+                bond_start_atom = bond.GetBeginAtom().GetSymbol()
+                bond_end_atom = bond.GetEndAtom().GetSymbol()
+                bond_type = bond.GetSmarts(allBondsExplicit=True)
+                bond_atoms = [bond_start_atom, bond_end_atom]
+                if (bond_type == ''):
+                    bond_type = "-"
+                bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
+                try:
+                    empty_bond_dict[bond_string] = 0
+                except KeyError:
+                    empty_base_bond_dict[bond_string] = 0
+    else:
+        for bond_string in predefined_bond_types:
+            empty_bond_dict[bond_string] = 0
 
     #second pass through to construct X
     bond_types = list(empty_bond_dict.keys())
@@ -355,3 +359,19 @@ def characteristic_poly(mol_list, useBO=False):
         eigenvalue_list[i] += [0]*pad_width
 
     return np.array(eigenvalue_list)
+
+#----------------------------------------------------------------------------
+def CDS_featurizer(mol_list):
+    from .descriptors import custom_descriptor_set
+    X_CDS = []
+    for mol in mol_list:
+        X_CDS += [custom_descriptor_set(mol)]
+    return np.array(X_CDS)
+
+#----------------------------------------------------------------------------
+def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[]):
+    from .fingerprints import truncated_Estate_featurizer
+    bond_types, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
+    X_CDS = CDS_featurizer(mol_list)
+    X_Estate = truncated_Estate_featurizer(mol_list)
+    return np.concatenate((X_CDS, X_LBoB, X_Estate), axis=1)

@@ -88,8 +88,9 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             plt.xlabel('Actual '+target_prop_name, fontsize=19)
             plt.ylabel('Predicted '+target_prop_name, fontsize=19)
             #label = '\n mean % error: '+str(mean_MAPE[name])
-            label=name+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_r2Ptest[name])
-            plt.text(.05, .72, label, fontsize = 21, transform=ax.transAxes)
+            #name+'\n'+
+            label=r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_r2Ptest[name])
+            plt.text(.045, .85, label, fontsize = 21, transform=ax.transAxes)
 
             kf = cv
             train, test = kf.split(x).__next__() #first in the generator
@@ -103,13 +104,14 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             #square axes
             maxy = 1.05*max([max(y_pred_train), max(y_pred_test), max(y)])
             miny = .95*min([min(y_pred_train), min(y_pred_test), min(y)])
+
             #reference line
-            plt.plot([0,maxy],[0, maxy],'k-')
+            plt.plot([miny,maxy],[miny, maxy],'k-')
             plt.xlim([miny,maxy])
             plt.ylim([miny,maxy])
 
     plt.tight_layout()
-    if (save_plot): plt.savefig('model_comparison.pdf')
+    if (save_plot): plt.savefig('model_comparison'+target_prop_name.strip()+'.pdf')
     plt.show()
 
 

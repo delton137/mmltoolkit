@@ -5,9 +5,9 @@ import numpy as np
 
 
 #------------------- grid search ----------------------------------------
-def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=True), scoring='neg_mean_absolute_error', verbose=False):
+def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=True), scoring='neg_mean_absolute_error', verbose=False, n_jobs=-1):
     '''Performs a grid search over param_grid and returns the best model'''
-    GSmodel = GridSearchCV(model, cv=cv, param_grid=param_grid, scoring=scoring, n_jobs=-1)
+    GSmodel = GridSearchCV(model, cv=cv, param_grid=param_grid, scoring=scoring, n_jobs=n_jobs)
 
     GSmodel = GSmodel.fit(X, y)
 

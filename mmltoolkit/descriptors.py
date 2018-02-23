@@ -5,6 +5,7 @@
 """
 from rdkit import Chem
 from rdkit.Chem import Descriptors, AddHs
+import numpy as np
 
 
 def get_num_atom(mol, atomic_number):
@@ -115,6 +116,7 @@ def custom_descriptor_set(mol):
                 get_num_with_neighs(mol, 'N', {'C': 1, 'N':2})     #CNF
                 #n_C/n_a, n_N/n_a, n_O/n_a, n_H/n_a
            ]
+
 
 
 
