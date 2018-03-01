@@ -170,7 +170,7 @@ def summed_bag_of_bonds(filename):
 
     #------- process into list -------------------------------------
     feature_names = list(BoB_dict.keys())
-    BoB_list = [BoB_dict[feature] for feature in feature_names]
+    BoB_list = [BoB_dict[feature] for feaature in feature_names]
 
     return feature_names, BoB_list
 

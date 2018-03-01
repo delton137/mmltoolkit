@@ -5,7 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cross_validation import ShuffleSplit
 from sklearn.metrics import mean_absolute_error
 from collections import defaultdict
-from .CV_tools import grid_search
+from mmltoolkit.CV_tools import grid_search
 import numpy as np
 
 #------------------------------------------------------------------------------------------
@@ -88,8 +88,9 @@ def mean_decrease_accuracy(x, y, feature_names, model=RandomForestRegressor(n_es
 
 #------------------------------------------------------------------------------------------
 def random_forest_feature_importance(x, y, feature_names, num_to_print='all', print_latex=False, n_estimators=100):
-    """ Calculation of feature importance scikit-learn random forest feature importance
-        AKA "gini importance" or "mean decrease (gini) impurity" or "mean decrease gini"
+    """ Calculation of feature importance scikit-learn random forest regression feature importance
+        In the context of regression, this is done by looking at the variance.
+        In the context of classification, this is typically done with the Gini impurity measurement
         REFS:
             Gilles Louppe, et al. "Understanding variable importances in forests of randomized trees"
         Required arguments:
@@ -123,7 +124,7 @@ def random_forest_feature_importance(x, y, feature_names, num_to_print='all', pr
 
 
 #------------------------------------------------------------------------------------------
-def LASSO_feature_importance(x, y, feature_names, print_latex=False, num_to_print='all', alpha=.001):
+def LASSO_feature_importance(x, y, feature_names, print_latex=False, num_to_print='all', alpha=.01):
     """ Calculation of feature importance using coefficients in LASSO model.
         "least absolute shrinkage and selection operator"
         Required arguments:
@@ -187,7 +188,7 @@ def shuffle_importance(x, y, feature_names, model=RandomForestRegressor(n_estima
     num_features = x.shape[1]
 
     #cross validate the scores on a number of different random splits of the data
-    for train_idx, test_idx in ShuffleSplit(n_splits=10, test_size=.4).split(x):
+    for train_idx, test_idx in ShuffleSplit(10, test_size=.4):
         X_train, X_test = x[train_idx], x[test_idx]
         Y_train, Y_test = y[train_idx], y[test_idx]
         model = model.fit(X_train, Y_train)
@@ -215,7 +216,7 @@ def shuffle_importance(x, y, feature_names, model=RandomForestRegressor(n_estima
     return sorted_feature_names, sorted_values
 
 #------------------------------------------------------------------------------------------
-def stability_selection_with_LASSO(x, y, feature_names, print_latex=False, alpha=.001):
+def stability_selection_with_LASSO(x, y, feature_names, print_latex=False, alpha=.01):
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -284,9 +285,36 @@ def pearson_correlation(x, y, feature_names):
 
     return sort_scores(scores, feature_names)
 
+#------------------------------------------------------------------------------------------
+def f_test(x, y, feature_names, p_cutoff = 0.05):
+
+    from sklearn.feature_selection import f_regression
+
+    num_features = len(feature_names)
+
+    raw_scores, p_values = f_regression(x, y)
+
+    scores = np.zeros(num_features)
+
+    #just keep non statistically significant scores at 0
+    for i in range(num_features):
+        if (p_value[i] < p_cutoff):
+            scores[i] = raw_scores[i]
+
+    return sort_scores(scores, feature_names)
+
 
 #------------------------------------------------------------------------------------------
-def maximal_information_coefficien(x, y, feature_names):
+def mutual_information(x, y, feature_names):
+    from sklearn.feature_selection import mutual_info_regression
+
+    scores = mutual_info_regression(x, y)
+
+    return sort_scores(scores, feature_names)
+
+
+#------------------------------------------------------------------------------------------
+def maximal_information_coefficient(x, y, feature_names):
 
     from minepy import MINE
 
@@ -303,20 +331,79 @@ def maximal_information_coefficien(x, y, feature_names):
     return sort_scores(scores, feature_names)
 
 
-#------------------------------------------------------------------------------------------
-def compare_feature_importances_and_print_table(x, y, feature_names):
-    methods = {}
-    method['LASSO'] = LASSO_feature_importance(x, y, feature_names)
-    method['random forrest variance score'] = random_forest_feature_importance(x, y, feature_names)
-    method['LASSO stability selection'] = stability_selection_with_LASSO(x, y, feature_names)
-    method['random forrest shuffling'] = shuffle_importance(x, y, feature_names)
-    method['Pearson correlation'] = pearson_correlation(x, y, feature_names)
-    method['mutual information criteria'] = mutual_information_criteria(x, y, feature_names)
+def print_signed(coeff):
+    if (coeff > 0):
+        print("+%5.3f" % coeff, end='')
+    elif (coeff == 0.0):
+        print(" %5.3f" % coeff, end='')
+    else:
+        print("%5.3f" % coeff, end='')
 
-    methods = method.keys()
+
+#------------------------------------------------------------------------------------------
+def compare_feature_ranking_methods(x, y, feature_names, print_latex=True,
+                                    print_basic_table=False, num_to_print=10, return_dict=False):
+    """
+        compares a bunch of feature ranking methods, prints a latex table (optional) and then
+        returns a dict with all the info (optional)
+    """
+    from collections import OrderedDict
+    method = OrderedDict()
+    method['LASSO'] = LASSO_feature_importance(x, y, feature_names, alpha=.01)
+    method['LASSO stability selection'] = stability_selection_with_LASSO(x, y, feature_names, alpha=.005)
+    method['random forest variance score'] = random_forest_feature_importance(x, y, feature_names)
+    method['random forest shuffling'] = shuffle_importance(x, y, feature_names)
+    method['Pearson correlation'] = pearson_correlation(x, y, feature_names)
+    method['$f$-test'] = mutual_information(x, y, feature_names)
+    method['MI'] = mutual_information(x, y, feature_names)
+    method['MIC'] = maximal_information_coefficient(x, y, feature_names)
+
+    methods = list(method.keys())
     num_methods = len(methods)
 
-    for i in range(10):
-        for this_method in methods0:
-            print(this_method[1][i] , endl=False)
-        print('\n')
+
+    # print basic table
+    if (print_basic_table):
+        for this_method in methods:
+            print(this_method)
+            for i in range(num_to_print):
+                print(method[this_method][0][i],' ' , end ='' )
+            print(method[this_method][0][10] , end ='\n' )
+
+    #print LaTeX table
+    if (print_latex):
+        print("\\begin{table*}")
+        print("\\begin{tabular}{c|", end='')
+        for i in range(num_methods-1):
+            print("cc|",end='')
+        print('cc|}')
+
+        print(" &", end='')
+        for i in range(num_methods-1):
+            print("\\multicolumn{2}{c|}{\\rot{"+methods[i]+"}} & ", end='')
+
+        print("\\multicolumn{2}{c|}{\\rot{"+methods[num_methods-1]+"}}\\\\")
+
+        for i in range(num_to_print):
+            print("%i &" % (i), end='')
+            for j in range(num_methods-1):
+                print("%5s &" % (method[methods[j]][0][i]), end='')
+                if (min(method[methods[j]][1][:])<0):
+                    print_signed(method[methods[j]][1][i])
+                else:
+                    print("%5.3f" % method[methods[j]][1][i], end='')
+                print("&", end='')
+
+            j = num_methods-1
+            print("%5s &" % (method[methods[j]][0][i]), end='')
+            if (min(method[methods[j]][1][:])<0):
+                print_signed(method[methods[j]][1][i])
+            else:
+                print("%5.3f" % method[methods[j]][1][i], end='')
+            print("\\\\")
+
+        print("\\end{tabular}")
+        print("\\end{table*}")
+
+    if (return_dict):
+        return method

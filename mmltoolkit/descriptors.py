@@ -101,7 +101,6 @@ def custom_descriptor_set(mol):
     else:
         NCratio = n_N/n_C
 
-
     return [oxygen_balance_100(mol), n_C, n_N, n_O1, n_O2, n_O3, n_O4, n_H, n_F, NCratio,
                 get_num_with_neighs(mol, 'N', {'O': 2, 'C': 1}) ,  #CNO2
                 get_num_with_neighs(mol, 'N', {'O': 2, 'N': 1}) ,  #NNO2
