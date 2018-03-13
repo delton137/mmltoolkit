@@ -92,7 +92,7 @@ def test_everything(data, featurization_dict, targets, cv=KFold(n_splits=5,shuff
                         "MAPE": -1*scores_dict['test_MAPE'].mean(),
                         "MAE": -1*scores_dict['test_abs_err'].mean(),
                         "MAE_std": np.std(-1*scores_dict['test_abs_err']),
-                        "r2" : scores_dict['test_r2P'].mean()
+                        "r" : scores_dict['test_rP'].mean()
                 }
 
                 modelresults[modelname] = relevant_scores
@@ -123,6 +123,7 @@ target_short_names = {
 
 #----------------------------------------------------------------------------
 def print_everything(results, best, targets, boldbest=True, target_short_names=target_short_names):
+    print("\\begin{table*}[ht]")
     print("\\begin{tabular}{cc",end='')
     for l in range(len(targets)):
           print("c",end='')
@@ -161,3 +162,4 @@ def print_everything(results, best, targets, boldbest=True, target_short_names=t
                     print(" & ", end='')
 
     print("\\end{tabular}")
+    print("\\end{table*}")

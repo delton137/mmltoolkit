@@ -27,8 +27,8 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
     mean_MAPE = {}
     mean_R2train = {}
     mean_R2test = {}
-    mean_r2Ptest = {}
-    mean_r2Ptrain = {}
+    mean_rPtest = {}
+    mean_rPtrain = {}
     percent_errors = {}
     subplot_index = 1
 
@@ -51,8 +51,8 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
         std_abs_err[name] = np.std(-1*scores_dict['test_abs_err'])
         mean_R2test[name] = scores_dict['test_R2'].mean()
         mean_R2train[name] = scores_dict['train_R2'].mean()
-        mean_r2Ptrain[name] = scores_dict['train_r2P'].mean()
-        mean_r2Ptest[name] = scores_dict['test_r2P'].mean()
+        mean_rPtrain[name] = scores_dict['train_rP'].mean()
+        mean_rPtest[name] = scores_dict['test_rP'].mean()
         model_dict[name] = model
 
     sorted_names = sorted(mean_abs_err, key=mean_abs_err.__getitem__, reverse=False)
@@ -66,7 +66,7 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
             plt.xlabel('Actual '+target_prop_name, fontsize=19)
             plt.ylabel('Predicted '+target_prop_name, fontsize=19)
             #label = '\n mean % error: '+str(mean_MAPE[name])
-            label=name+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_r2Ptest[name])
+            label=name+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_rPtest[name])
             plt.text(.05, .72, label, fontsize = 21, transform=ax.transAxes)
 
             kf = cv
@@ -107,6 +107,6 @@ def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), ma
                                                         RMSE[name],
                                                         mean_R2train[name],
                                                         mean_R2test[name],
-                                                        mean_r2Ptrain[name],
-                                                        mean_r2Ptest[name]))
+                                                        mean_rPtrain[name],
+                                                        mean_rPtest[name]))
     print("\\end{tabular}")

@@ -32,8 +32,10 @@ Ether
 [OD2]([#6])[#6]
 Fulminate
 C=NO
-Primary amine
+primary amine
 [NX3;H2;!$(NC=[!#6]);!$(NC#[!#6])][#6]
+secondary amine
+[NX3;H;!$(NC=[!#6]);!$(NC#[!#6])][#6]
 Enamine
 [NX3][$(C=C),$(cc)]
 Azide
