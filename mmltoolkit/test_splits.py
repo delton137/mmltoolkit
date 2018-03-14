@@ -20,7 +20,7 @@ def print_latex_row(name, scores_dict):
                                   ))
 
 #--------------------------------------------------------------------------------
-def test_splits(X, y, model, groups=None, print_latex=True, n_clusters=10):
+def test_splits(X, y, model, groups=None, print_latex=True, n_clusters=5, verbose=True):
 
     scores_dict_stratificaiton = test_and_plot(X , y,  model,
                             StratifiedShuffleSplit(n_splits=5),
@@ -33,6 +33,10 @@ def test_splits(X, y, model, groups=None, print_latex=True, n_clusters=10):
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(X)
     clusters = kmeans.labels_
+
+    if (verbose):
+        print("size of clusters:")
+        print([len(clusters[clusters==i]) for i in range(n_clusters)])
 
     scores_dict_clusters = test_and_plot(X, y, model,
                             StratifiedShuffleSplit(n_splits=5),

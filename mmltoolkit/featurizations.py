@@ -170,7 +170,7 @@ def summed_bag_of_bonds(filename):
 
     #------- process into list -------------------------------------
     feature_names = list(BoB_dict.keys())
-    BoB_list = [BoB_dict[feature] for feaature in feature_names]
+    BoB_list = [BoB_dict[feature] for feature in feature_names]
 
     return feature_names, BoB_list
 
@@ -371,7 +371,10 @@ def CDS_featurizer(mol_list):
 #----------------------------------------------------------------------------
 def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[]):
     from .fingerprints import truncated_Estate_featurizer
+    from sklearn.preprocessing import StandardScaler
     bond_types, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
     X_CDS = CDS_featurizer(mol_list)
     X_Estate = truncated_Estate_featurizer(mol_list)
-    return np.concatenate((X_CDS, X_LBoB, X_Estate), axis=1)
+    X_combined = np.concatenate((X_CDS, X_LBoB, X_Estate), axis=1)
+    X_scaled = StandardScaler().fit_transform(X_combined)
+    return X_scaled
