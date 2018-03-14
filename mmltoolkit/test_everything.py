@@ -21,13 +21,13 @@ def make_CV_models(X, y):
     '''
 
     model_dict = {
-            'KR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 1, 50), "gamma": np.logspace(-15, -5, 50), "kernel" : ['rbf','laplacian']}),
+            'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 2, 60), "gamma": np.logspace(-15, -1, 60), "kernel" : ['rbf','laplacian']}),
             'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
-            'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
-            'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
-            'BR'    : grid_search(X, y, BayesianRidge(), param_grid={"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}) ,
-            'GBoost': grid_search(X, y, GradientBoostingRegressor(), param_grid={"n_estimators": np.linspace(5, 350, 100).astype('int')} ),
-            'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 200, 100).astype('int')}, ),
+            'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
+            #'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
+            #'BR'    : grid_search(X, y, BayesianRidge(), param_grid={"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}) ,
+            #'GBoost': grid_search(X, y, GradientBoostingRegressor(), param_grid={"n_estimators": np.linspace(5, 350, 100).astype('int')} ),
+            'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 100, 50).astype('int')}, ),
             'kNN'   : grid_search(X, y, KNeighborsRegressor(), param_grid={"n_neighbors": np.linspace(2,20,18).astype('int')} ),
             'mean'  : DummyRegressor(strategy='mean'),
             }
@@ -39,6 +39,7 @@ def make_CV_models(X, y):
 def test_everything(data, featurization_dict, targets, cv=KFold(n_splits=5,shuffle=True), verbose=False, normalize=False ):
     ''' test all combinations of target variable, featurizations, and models by performing a gridsearch CV hyperparameter
         optimization for each combination and then CV scoring the best model.
+        We later changed cv=KFold() to ShuffleSplit()
 
         required args:
             data : a pandas dataframe with the target data in columns

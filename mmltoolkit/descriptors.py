@@ -6,6 +6,40 @@
 from rdkit import Chem
 from rdkit.Chem import Descriptors, AddHs
 import numpy as np
+from rdkit.Chem.Descriptors import _descList
+from rdkit.ML.Descriptors.MoleculeDescriptors import MolecularDescriptorCalculator
+
+
+
+def RDKit_descriptor_featurizer(mol_list, descriptor_list=_descList):
+    num_descriptors = len( descriptor_list)
+    num_mols = len(mol_list)
+    descriptor_function_names = [_descList[i][0] for i in range(num_descriptors)]
+
+    mdc = MolecularDescriptorCalculator(simpleList=descriptor_function_names)
+
+    X = np.zeros([num_mols, num_descriptors])
+
+    for i in range(num_mols):
+        X[i,:] = np.array(mdc.CalcDescriptors(mol_list[i]))
+
+    descriptor_function_names = np.array(descriptor_function_names)
+
+    #Drop descriptors that are zero for every molecule in the list
+    cols_to_drop = []
+    for i in range(num_descriptors):
+        if (sum(X[:,i]) == 0):
+            cols_to_drop += [i]
+
+    X_truncated = np.delete(X, cols_to_drop, 1)
+    descriptor_function_names_truncated = np.delete(descriptor_function_names, cols_to_drop, 0)
+
+    descriptor_function_names = list(descriptor_function_names)
+
+    return (X_truncated, descriptor_function_names_truncated)
+
+
+
 
 
 def get_num_atom(mol, atomic_number):
@@ -115,9 +149,6 @@ def custom_descriptor_set(mol):
                 get_num_with_neighs(mol, 'N', {'C': 1, 'N':2})     #CNF
                 #n_C/n_a, n_N/n_a, n_O/n_a, n_H/n_a
            ]
-
-
-
 
 def modified_oxy_balance(mol):
     '''returns an OB_100 descriptor with modified oxygen types

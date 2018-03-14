@@ -77,7 +77,7 @@ def get_scorers_dict():
 
     MAPE_scorer = make_scorer(mean_absolute_percentage_error, greater_is_better=False)
 
-    r2Pearson_scorer = make_scorer(r2Pearson, greater_is_better=True)
+    rPearson_scorer = make_scorer(rPearson, greater_is_better=True)
 
     scorers_dict = {'abs_err' : 'neg_mean_absolute_error',
                     'RMSE' : 'neg_mean_squared_error',
