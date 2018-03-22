@@ -141,4 +141,4 @@ def functional_group_featurizer(mol_list, drop_empty_features=True):
 
         fun_names = list(fun_names[0])
 
-    return X, fun_names
+    return fun_names, X

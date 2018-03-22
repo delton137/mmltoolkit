@@ -11,33 +11,6 @@ from rdkit.ML.Descriptors.MoleculeDescriptors import MolecularDescriptorCalculat
 
 
 
-def RDKit_descriptor_featurizer(mol_list, descriptor_list=_descList):
-    num_descriptors = len( descriptor_list)
-    num_mols = len(mol_list)
-    descriptor_function_names = [_descList[i][0] for i in range(num_descriptors)]
-
-    mdc = MolecularDescriptorCalculator(simpleList=descriptor_function_names)
-
-    X = np.zeros([num_mols, num_descriptors])
-
-    for i in range(num_mols):
-        X[i,:] = np.array(mdc.CalcDescriptors(mol_list[i]))
-
-    descriptor_function_names = np.array(descriptor_function_names)
-
-    #Drop descriptors that are zero for every molecule in the list
-    cols_to_drop = []
-    for i in range(num_descriptors):
-        if (sum(X[:,i]) == 0):
-            cols_to_drop += [i]
-
-    X_truncated = np.delete(X, cols_to_drop, 1)
-    descriptor_function_names_truncated = np.delete(descriptor_function_names, cols_to_drop, 0)
-
-    descriptor_function_names = list(descriptor_function_names)
-
-    return (X_truncated, descriptor_function_names_truncated)
-
 
 
 
@@ -202,3 +175,35 @@ def return_atom_nums_modified_OB(mol):
     n_O3 = get_num_with_neighs(mol, 'O', {'C': 1})
     n_O4 = get_num_with_neighs(mol, 'O', {'C': 1,'H': 1})
     return [n_C, n_N, n_H, n_O1, n_O2, n_O3, n_O4, n_F]
+
+
+
+def RDKit_descriptor_featurizer(mol_list, descriptor_list=_descList, return_names=True):
+    num_descriptors = len( descriptor_list)
+    num_mols = len(mol_list)
+    descriptor_function_names = [_descList[i][0] for i in range(num_descriptors)]
+
+    mdc = MolecularDescriptorCalculator(simpleList=descriptor_function_names)
+
+    X = np.zeros([num_mols, num_descriptors])
+
+    for i in range(num_mols):
+        X[i,:] = np.array(mdc.CalcDescriptors(mol_list[i]))
+
+    descriptor_function_names = np.array(descriptor_function_names)
+
+    #Drop descriptors that are zero for every molecule in the list
+    cols_to_drop = []
+    for i in range(num_descriptors):
+        if (sum(X[:,i]) == 0):
+            cols_to_drop += [i]
+
+    X_truncated = np.delete(X, cols_to_drop, 1)
+    descriptor_function_names_truncated = np.delete(descriptor_function_names, cols_to_drop, 0)
+
+    descriptor_function_names = list(descriptor_function_names)
+
+    if (return_names):
+        return descriptor_function_names_truncated, X_truncated
+    else:
+        return X_truncated

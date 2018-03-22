@@ -21,15 +21,15 @@ def make_CV_models(X, y):
     '''
 
     model_dict = {
-            'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 2, 60), "gamma": np.logspace(-15, -1, 60), "kernel" : ['rbf','laplacian']}),
-            'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
-            'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
+            'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -1, 100), "kernel" : ['rbf']}),
+            #'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
+            #'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
             #'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
             #'BR'    : grid_search(X, y, BayesianRidge(), param_grid={"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}) ,
-            #'GBoost': grid_search(X, y, GradientBoostingRegressor(), param_grid={"n_estimators": np.linspace(5, 350, 100).astype('int')} ),
-            'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 100, 50).astype('int')}, ),
-            'kNN'   : grid_search(X, y, KNeighborsRegressor(), param_grid={"n_neighbors": np.linspace(2,20,18).astype('int')} ),
-            'mean'  : DummyRegressor(strategy='mean'),
+            'GBoost': grid_search(X, y, GradientBoostingRegressor(), param_grid={"n_estimators": np.linspace(5, 350, 100).astype('int')} ),
+            #'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 100, 50).astype('int')}, ),
+            #'kNN'   : grid_search(X, y, KNeighborsRegressor(), param_grid={"n_neighbors": np.linspace(2,20,18).astype('int')} ),
+            #'mean'  : DummyRegressor(strategy='mean'),
             }
 
     return model_dict
@@ -93,7 +93,8 @@ def test_everything(data, featurization_dict, targets, cv=KFold(n_splits=5,shuff
                         "MAPE": -1*scores_dict['test_MAPE'].mean(),
                         "MAE": -1*scores_dict['test_abs_err'].mean(),
                         "MAE_std": np.std(-1*scores_dict['test_abs_err']),
-                        "r" : scores_dict['test_rP'].mean()
+                        "r" : scores_dict['test_rP'].mean(),
+                        "full_scores_dict" : scores_dict
                 }
 
                 modelresults[modelname] = relevant_scores
@@ -123,7 +124,8 @@ target_short_names = {
 
 
 #----------------------------------------------------------------------------
-def print_everything(results, best, targets, boldbest=True, target_short_names=target_short_names):
+def print_everything(results, best, targets, boldbest=True, target_short_names=target_short_names, show_train_scores=False):
+
     print("\\begin{table*}[ht]")
     print("\\begin{tabular}{cc",end='')
     for l in range(len(targets)):
@@ -149,13 +151,16 @@ def print_everything(results, best, targets, boldbest=True, target_short_names=t
                 #print("%4.2f" % (scores_dict['r2']), end='')
                 #print(" %5.2f, %4.2f  " % (scores_dict['MAE'], scores_dict['r2']), end='')
 
-                if (boldbest):
-                    if ([featurization, model] == best[target]):
-                        print("\\bf{%5.2f}" % (scores_dict['MAE']), end='')
+                if (show_train_scores):
+                    print("%5.2f,%5.2f" % (scores_dict['MAE'], scores_dict['train_MAE']), end='')
+                else:
+                    if (boldbest):
+                        if ([featurization, model] == best[target]):
+                            print("\\bf{%5.2f}" % (scores_dict['MAE']), end='')
+                        else:
+                            print("%5.2f" % (scores_dict['MAE']), end='')
                     else:
                         print("%5.2f" % (scores_dict['MAE']), end='')
-                else:
-                    print("%5.2f" % (scores_dict['MAE']), end='')
 
                 if (j == len(targets)-1):
                     print("\\\\")

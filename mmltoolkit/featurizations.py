@@ -1,9 +1,14 @@
 import numpy as np
 import copy
+from sklearn.preprocessing import StandardScaler
 from rdkit import Chem
 from rdkit.Chem.rdmolops import Get3DDistanceMatrix, GetAdjacencyMatrix, GetDistanceMatrix
 from rdkit.Chem.Graphs import CharacteristicPolynomial
-
+from rdkit.Chem.Descriptors import _descList
+from collections import defaultdict
+from .fingerprints import truncated_Estate_featurizer
+from .descriptors import RDKit_descriptor_featurizer
+from .functional_group_featurizer import functional_group_featurizer
 atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9 }
 
 
@@ -226,6 +231,25 @@ def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
 def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
     return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
 
+
+def sum_over_bonds_single_mol(mol, bond_types):
+    bonds = mol.GetBonds()
+    bond_dict = defaultdict(lambda : 0)
+
+    for bond in bonds:
+        bond_start_atom = bond.GetBeginAtom().GetSymbol()
+        bond_end_atom = bond.GetEndAtom().GetSymbol()
+        bond_type = bond.GetSmarts(allBondsExplicit=True)
+        if (bond_type == ''):
+            bond_type = "-"
+        bond_atoms = [bond_start_atom, bond_end_atom]
+        bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
+        bond_dict[bond_string] += 1
+
+    X_LBoB = [bond_dict[bond_type] for bond_type in bond_types]
+
+    return np.array(X_LBoB).astype('float64')
+
 #----------------------------------------------------------------------------
 def sum_over_bonds(mol_list, predefined_bond_types=[]):
     '''
@@ -240,7 +264,7 @@ def sum_over_bonds(mol_list, predefined_bond_types=[]):
     '''
 
     if (isinstance(mol_list, list) == False):
-        mol_list = [mol_list]
+        mol_list = list(mol_list)
 
     empty_bond_dict = {}
     num_mols = len(mol_list)
@@ -361,20 +385,47 @@ def characteristic_poly(mol_list, useBO=False):
     return np.array(eigenvalue_list)
 
 #----------------------------------------------------------------------------
-def CDS_featurizer(mol_list):
+def CDS_featurizer(mol_list, return_names = False):
     from .descriptors import custom_descriptor_set
     X_CDS = []
     for mol in mol_list:
         X_CDS += [custom_descriptor_set(mol)]
-    return np.array(X_CDS)
+
+    X = np.array(X_CDS)
+
+    CDS_names = ['OB_100', 'n_C', 'n_N', 'n_NO', 'n_COH', 'n_NOC', 'n_CO', 'n_H', 'n_F', 'n_N/n_C', 'n_CNO2',
+    'n_NNO2', 'n_ONO', 'n_ONO2', 'n_CNN', 'n_NNN', 'n_CNO', 'n_CNH2', 'n_CN(O)C', 'n_CF', 'n_CNF']
+
+    if (return_names):
+        return CDS_names, X
+    else:
+        return X
 
 #----------------------------------------------------------------------------
 def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[]):
-    from .fingerprints import truncated_Estate_featurizer
-    from sklearn.preprocessing import StandardScaler
     bond_types, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
     X_CDS = CDS_featurizer(mol_list)
     X_Estate = truncated_Estate_featurizer(mol_list)
     X_combined = np.concatenate((X_CDS, X_LBoB, X_Estate), axis=1)
     X_scaled = StandardScaler().fit_transform(X_combined)
     return X_scaled
+
+#----------------------------------------------------------------------------
+def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descriptor_list=_descList, return_names = True, verbose=False):
+    names_RDkit, X_RDKit = RDKit_descriptor_featurizer(mol_list, descriptor_list=rdkit_descriptor_list)
+    names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
+    names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
+    names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
+    names_fun, X_fun = functional_group_featurizer(mol_list)
+
+    if verbose: print("number of RDKit descriptors used : %i" % (len(names_RDkit)))
+
+    X_combined = np.concatenate((X_RDKit, X_CDS, X_LBoB, X_Estate, X_fun), axis=1)
+    X_scaled = StandardScaler().fit_transform(X_combined)
+
+    names_all = list(names_RDkit)+list(names_LBoB)+list(names_CDS)+list(names_Estate)+list(names_fun)
+
+    if (return_names):
+        return X_scaled, names_all
+    else:
+        return X_scaled
