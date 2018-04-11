@@ -228,10 +228,7 @@ def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
     return Cmat_eigenvalues, Cmat_as_vec
 
 
-def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
-    return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
-
-
+#----------------------------------------------------------------------------
 def sum_over_bonds_single_mol(mol, bond_types):
     bonds = mol.GetBonds()
     bond_dict = defaultdict(lambda : 0)
@@ -250,6 +247,11 @@ def sum_over_bonds_single_mol(mol, bond_types):
 
     return np.array(X_LBoB).astype('float64')
 
+
+
+def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
+    return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
+
 #----------------------------------------------------------------------------
 def sum_over_bonds(mol_list, predefined_bond_types=[]):
     '''
@@ -264,7 +266,7 @@ def sum_over_bonds(mol_list, predefined_bond_types=[]):
     '''
 
     if (isinstance(mol_list, list) == False):
-        mol_list = list(mol_list)
+        mol_list = [mol_list]
 
     empty_bond_dict = {}
     num_mols = len(mol_list)
@@ -301,12 +303,16 @@ def sum_over_bonds(mol_list, predefined_bond_types=[]):
         for bond in bonds:
             bond_start_atom = bond.GetBeginAtom().GetSymbol()
             bond_end_atom = bond.GetEndAtom().GetSymbol()
-            bond_type = bond.GetSmarts(allBondsExplicit=True)
-            if (bond_type == ''):
-                bond_type = "-"
-            bond_atoms = [bond_start_atom, bond_end_atom]
-            bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
-            bond_dict[bond_string] += 1
+            #skip dummy atoms
+            if (bond_start_atom=='*' or bond_end_atom=='*'):
+                pass
+            else:
+                bond_type = bond.GetSmarts(allBondsExplicit=True)
+                if (bond_type == ''):
+                    bond_type = "-"
+                bond_atoms = [bond_start_atom, bond_end_atom]
+                bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
+                bond_dict[bond_string] += 1
 
         X_LBoB[i,:] = [bond_dict[bond_type] for bond_type in bond_types]
 
@@ -318,7 +324,6 @@ def adjacency_matrix_eigenvalues(mol_list, useBO=False):
 
     eigenvalue_list = []
     max_length = 0
-
 
     for mol in mol_list:
         adj_matrix = GetAdjacencyMatrix(mol, useBO=useBO)
@@ -402,13 +407,41 @@ def CDS_featurizer(mol_list, return_names = False):
         return X
 
 #----------------------------------------------------------------------------
-def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[]):
-    bond_types, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
-    X_CDS = CDS_featurizer(mol_list)
-    X_Estate = truncated_Estate_featurizer(mol_list)
-    X_combined = np.concatenate((X_CDS, X_LBoB, X_Estate), axis=1)
+def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=False):
+
+    if (isinstance(mol_list, list) == False):
+        mol_list = [mol_list]
+
+    names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
+    names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
+    names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
+
+    X_combined = np.concatenate((X_Estate, X_CDS, X_LBoB), axis=1)
     X_scaled = StandardScaler().fit_transform(X_combined)
-    return X_scaled
+
+    names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)
+
+    if (return_names):
+        return X_scaled, names_all
+    else:
+        return X_scaled
+
+#----------------------------------------------------------------------------
+def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[],  return_names = True, verbose=False):
+    names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
+    names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
+    names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
+    names_fun, X_fun = functional_group_featurizer(mol_list)
+
+    X_combined = np.concatenate((X_Estate, X_CDS, X_LBoB, X_fun), axis=1)
+    X_scaled = StandardScaler().fit_transform(X_combined)
+
+    names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)+list(names_fun)
+
+    if (return_names):
+        return X_scaled, names_all
+    else:
+        return X_scaled
 
 #----------------------------------------------------------------------------
 def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descriptor_list=_descList, return_names = True, verbose=False):

@@ -19,7 +19,7 @@ def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=Tr
         print(str(scoring)+":")
         print(-1*GSmodel.best_score_)
 
-    return  GSmodel.best_estimator_
+    return GSmodel.best_estimator_
 
 def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / (y_true))) * 100
@@ -131,7 +131,7 @@ def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=Tru
 
 
 #--------------------------------------------------------------------
-def test_and_plot(X, y, model, splitter, groups=None, display_plot = True, plot_title=''):
+def test_and_plot(X, y, model, splitter=ShuffleSplit(n_splits=5), groups=None, units='', property_name='', display_plot = True, plot_title='', savefig=False, filename=''):
     scorers_dict = get_score_functions_dict()
 
     n_splits = splitter.get_n_splits()
@@ -158,13 +158,17 @@ def test_and_plot(X, y, model, splitter, groups=None, display_plot = True, plot_
 
 
     if (display_plot):
-        plt.figure(figsize=(6,6))
+        plt.figure(figsize=(7,7))
         plt.clf()
-        plt.xlabel('Actual',fontsize=19)
-        plt.ylabel('Predicted', fontsize=19)
-        label=plot_title+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(MAE_test)+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(r_test)
+        plt.xlabel('Actual '+property_name,fontsize=19)
+        plt.ylabel('Predicted '+property_name, fontsize=19)
+        MAE_test = 10**MAE_test
+        if (units == ''):
+            label=plot_title+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(MAE_test)+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(r_test)
+        else:
+            label=plot_title+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(MAE_test)+'('+units+')'+"\n"+r'$\langle$ r$\rangle$ (test) = %4.2f'%(r_test)
         ax = plt.gca()
-        plt.text(.05, .72, label, fontsize = 21, transform=ax.transAxes)
+        plt.text(.05, .85, label, fontsize = 21, transform=ax.transAxes)
 
         train, test = splitter.split(X, groups).__next__() #first in the generator
         model.fit(X[train], y[train])
@@ -182,6 +186,11 @@ def test_and_plot(X, y, model, splitter, groups=None, display_plot = True, plot_
 
         #reference line
         plt.plot([miny,maxy],[miny, maxy],'k-')
+
+        if (savefig):
+            plt.savefig(filename+".png",bbox_inches='tight', pad_inches=0)
+
         plt.show()
+
 
     return scores

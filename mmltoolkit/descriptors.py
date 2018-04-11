@@ -37,7 +37,7 @@ def return_atom_nums(mol):
 
 def get_neigh_dict(atom):
     '''returns a dictionary with the number of neighbors for a given atom of types C,N,H,O,F'''
-    neighs = {'N':0,'C':0,'O':0,'H':0,'F':0}
+    neighs = {'N':0,'C':0,'O':0,'H':0,'F':0, '*':0}
     for atom in atom.GetNeighbors():
         neighs[atom.GetSymbol()] += 1
     return neighs

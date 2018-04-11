@@ -120,9 +120,6 @@ def random_forest_feature_importance(x, y, feature_names, num_to_print='all', pr
 
     return sorted_feature_names, sorted_values
 
-
-
-
 #------------------------------------------------------------------------------------------
 def LASSO_feature_importance(x, y, feature_names, print_latex=False, num_to_print='all', alpha=.01):
     """ Calculation of feature importance using coefficients in LASSO model.
@@ -385,7 +382,7 @@ def compare_feature_ranking_methods(x, y, feature_names, print_latex=True,
         print("\\multicolumn{2}{c|}{\\rot{"+methods[num_methods-1]+"}}\\\\")
 
         for i in range(num_to_print):
-            print("%i &" % (i), end='')
+            print("%i &" % (i+1), end='')
             for j in range(num_methods-1):
                 print("%5s &" % (method[methods[j]][0][i]), end='')
                 if (min(method[methods[j]][1][:])<0):
