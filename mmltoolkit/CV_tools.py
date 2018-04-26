@@ -5,10 +5,11 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-#------------------- grid search ----------------------------------------
-def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=True), scoring='neg_mean_absolute_error', verbose=False, n_jobs=-1):
+#------------------------------------------------------------------------
+def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=True),
+                scoring='neg_mean_absolute_error', verbose=False, n_jobs=-1):
     '''Performs a grid search over param_grid and returns the best model'''
+
     GSmodel = GridSearchCV(model, cv=cv, param_grid=param_grid, scoring=scoring, n_jobs=n_jobs)
 
     GSmodel = GSmodel.fit(X, y)
@@ -21,6 +22,57 @@ def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=Tr
 
     return GSmodel.best_estimator_
 
+#------------------------------------------------------------------------
+def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_splits=5, shuffle=True),
+                         outer_cv=ShuffleSplit(), verbose=False, n_jobs=-1):
+    '''
+        This is the standard "nested" CV scheme, where hyperparameter optimization is redone
+        for each train_test split by splitting the train set further into train and validation sets.
+    '''
+
+    kf = outer_cv
+    n_folds = outer_cv.get_n_splits()
+
+    scores_dict = {'MAE' : 0, 'MAE_std' : 0, 'RMSE' : 0,
+                    'R2' : 0, 'rP' : 0, 'MAPE' : 0
+                    'rP_train' : 0 , 'MAE_train' : 0 }
+
+    MAEs = []
+
+    for i in range(n_folds):
+
+        train, test = kf.split(X).__next__()
+
+        best_model = grid_search(X[train], y[train], model, param_grid, cv=inner_cv), n_jobs=-1)
+
+        best_model.fit(X[train], y[train])
+
+        y_pred =  best_model.predict(X[test])
+        y_true = y[test]
+
+        y_pred_train =  best_model.predict(X[train])
+        y_true_train = y[train]
+
+        MAEs += [mean_absolute_error(y_true, y_pred)]
+        scores_dict['MAE_train'] += mean_absolute_error(y_true_train, y_pred_train)
+        scores_dict['RMSE'] += root_mean_squared_error(y_true, y_pred)
+        scores_dict['R2']   += R2(y_true, y_pred)
+        scores_dict['rP']   += rPearson(y_true, y_pred)
+        scores_dict['rP_train'] += rPearson(y_true_train, y_pred_train)
+        scores_dict['MAPE'] += mean_absolute_percentage_error(y_true, y_pred)
+
+    scores_dict['MAE']   = np.mean(MAEs)
+    scores_dict['MAE_std'] = np.std(MAEs)
+    scores_dict['MAE_train'] = scores_dict['MAE_train']/n_folds
+    scores_dict['RMSE'] = scores_dict['RMSE']/n_folds
+    scores_dict['R2']   = scores_dict['R2']/n_folds
+    scores_dict['rP']   = scores_dict['rP']/n_folds
+    scores_dict['rP_train'] = scores_dict['rP_train']/n_folds
+    scores_dict['MAPE'] = scores_dict['MAPE']/n_folds
+
+    return scores_dict
+
+#------------------------------------------------------------------------
 def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / (y_true))) * 100
 
@@ -40,7 +92,7 @@ def neg_mean_squared_error(y_true, y_pred):
     return -1*np.mean((y_true - y_pred)**2)
 
 def rPearson(y_true, y_pred):
-    #Pearson correlation r (not r^2)
+    """ calculates Pearson correlation r (not r^2) """
     mean_y_true = np.mean(y_true)
     mean_y_pred = np.mean(y_pred)
     numer = 0.0
@@ -53,16 +105,8 @@ def rPearson(y_true, y_pred):
     return  (numer/np.sqrt(denom1*denom2+0.000000001))**2
 
 def r2(y_true, y_pred):
-    #for backwards compatibility
+    """ another function for Pearson r included for backwards compatibility"""
     return rPearson(y_true, y_pred)
-
-def r2P(y_true, y_pred):
-    #for backwards compatibility
-    return rPearson(y_true, y_pred)
-
-def R2CV(y_true, y_pred):
-    mean_y_true = np.mean(y)
-    return 1.0 - np.mean((y_true - y_pred)**2)/np.mean((y_true-mean_y_true)**2)
 
 def R2(y_true, y_pred):
     mean_y_true = np.mean(y_true)
@@ -70,7 +114,7 @@ def R2(y_true, y_pred):
 
 #--------------------------------------------------------------------
 def get_scorers_dict():
-    """Generate a dictionary of scikitlearn scoring methods that is useful for use with cross_validate()
+    """ Generate a dictionary of scikitlearn scoring methods that is useful for use with cross_validate()
         returns:
             scorers_dict : (dictionary)
     """
@@ -85,9 +129,9 @@ def get_scorers_dict():
                     'rP' : rPearson_scorer,
                     'MAPE' : MAPE_scorer}
 
-
     return scorers_dict
 
+#--------------------------------------------------------------------
 def get_score_functions_dict():
         """Generate a dictionary of scoring methods that is useful for use with cross_validate()
             returns:
@@ -113,6 +157,7 @@ def test_model_cv(model, x, y, cv=KFold(n_splits=5,shuffle=True)):
 
     return scores.mean()
 
+
 #--------------------------------------------------------------------
 def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=True, verbose=False):
     if (do_grid_search):
@@ -132,6 +177,9 @@ def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=Tru
 
 #--------------------------------------------------------------------
 def test_and_plot(X, y, model, splitter=ShuffleSplit(n_splits=5), groups=None, units='', property_name='', display_plot = True, plot_title='', savefig=False, filename=''):
+
+
+
     scorers_dict = get_score_functions_dict()
 
     n_splits = splitter.get_n_splits()
@@ -155,7 +203,6 @@ def test_and_plot(X, y, model, splitter=ShuffleSplit(n_splits=5), groups=None, u
 
     MAE_test = np.mean(scores['test_abs_err'])
     r_test = np.mean(scores['test_rP'])
-
 
     if (display_plot):
         plt.figure(figsize=(7,7))

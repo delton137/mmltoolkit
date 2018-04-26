@@ -10,7 +10,7 @@ from .CV_tools import *
 #------------------- mdoel comparison function ---------------------------------
 def test_models_and_plot(x, y, model_dict, cv=KFold(n_splits=5,shuffle=True), make_plots=False, save_plot=False,
                          target_prop_name='', units = '', verbose=False, make_combined_plot=False, num_fig_rows = 2):
-    ''' test a bunch of models and print out a sorted list of CV accuracies
+    ''' test a bunch of models (with hyperparameters already set) and print out a sorted list of CV metrics
         inputs:
             x: training data features, numpy array or Pandas dataframe
             y: training data labels, numpy array or Pandas dataframe

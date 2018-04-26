@@ -1,3 +1,8 @@
+"""
+Note : currently the Coulomb Matrix and Bag of Bonds functions take .xyz filenames as inputs
+       in the future, they could be rewritten to work on RDKit mol objects, like the rest of the
+       featurization functions. 
+"""
 import numpy as np
 import copy
 from sklearn.preprocessing import StandardScaler
@@ -10,8 +15,6 @@ from .fingerprints import truncated_Estate_featurizer
 from .descriptors import RDKit_descriptor_featurizer
 from .functional_group_featurizer import functional_group_featurizer
 atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9 }
-
-
 
 #----------------------------------------------------------------------------
 def bag_of_bonds(filename_list, verbose=False):
@@ -248,7 +251,7 @@ def sum_over_bonds_single_mol(mol, bond_types):
     return np.array(X_LBoB).astype('float64')
 
 
-
+#----------------------------------------------------------------------------
 def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
     return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
 
@@ -317,7 +320,6 @@ def sum_over_bonds(mol_list, predefined_bond_types=[]):
         X_LBoB[i,:] = [bond_dict[bond_type] for bond_type in bond_types]
 
     return bond_types, X_LBoB
-
 
 #----------------------------------------------------------------------------
 def adjacency_matrix_eigenvalues(mol_list, useBO=False):
@@ -398,8 +400,8 @@ def CDS_featurizer(mol_list, return_names = False):
 
     X = np.array(X_CDS)
 
-    CDS_names = ['OB_100', 'n_C', 'n_N', 'n_NO', 'n_COH', 'n_NOC', 'n_CO', 'n_H', 'n_F', 'n_N/n_C', 'n_CNO2',
-    'n_NNO2', 'n_ONO', 'n_ONO2', 'n_CNN', 'n_NNN', 'n_CNO', 'n_CNH2', 'n_CN(O)C', 'n_CF', 'n_CNF']
+    CDS_names = ['OB$_{100}$', 'n_C', 'n_N', 'n_NO', 'n_COH', 'n_NOC', 'n_CO', 'n_H', 'n_F', 'n_N/n_C', 'n_CNO2',
+    'n$_{\\ff{NNO}_2}$', 'n$_{\\ff{ONO}}$', 'n$_{\\ff{ONO}_2}$', 'n_$\\ff{CNN}$', 'n_$\\ff{NNN}$', 'n_CNO', 'n_CNH2', 'n_CN(O)C', 'n_CF', 'n_CNF']
 
     if (return_names):
         return CDS_names, X
@@ -427,7 +429,7 @@ def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=
         return X_scaled
 
 #----------------------------------------------------------------------------
-def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[],  return_names = True, verbose=False):
+def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], return_names= True, verbose=False):
     names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
     names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
     names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)

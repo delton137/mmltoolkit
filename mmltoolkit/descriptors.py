@@ -28,10 +28,10 @@ def get_num_atom(mol, atomic_number):
 def return_atom_nums(mol):
     ''' returns a vector with the number of C,N,H,O,F atoms'''
     n_O = get_num_atom(mol,8)
-    n_C = get_num_atom(mol,12)
-    n_N = get_num_atom(mol,14)
+    n_C = get_num_atom(mol,6)
+    n_N = get_num_atom(mol,7)
     n_H = get_num_atom(mol,1)
-    n_H = get_num_atom(mol,9)
+    n_F = get_num_atom(mol,9)
     return [n_O, n_C, n_N, n_H, n_F]
 
 
@@ -72,8 +72,7 @@ def get_num_with_neighs(mol, central_atom, target_dict):
 def oxygen_balance_1600(mol):
     '''returns the OB_16000 descriptor'''
     n_O = get_num_atom(mol, 8)
-    n_C = get_num_atom(mol, 12)
-    n_N = get_num_atom(mol, 14)
+    n_C = get_num_atom(mol, 6)
     n_H = get_num_atom(mol, 1)
     mol_weight = Descriptors.ExactMolWt(mol)
     return 1600*(n_O - 2*n_C - n_H/2)/mol_weight
@@ -82,8 +81,7 @@ def oxygen_balance_1600(mol):
 def oxygen_balance_100(mol):
     '''returns the OB_100 descriptor'''
     n_O = get_num_atom(mol, 8)
-    n_C = get_num_atom(mol, 12)
-    n_N = get_num_atom(mol, 14)
+    n_C = get_num_atom(mol, 6)
     n_H = get_num_atom(mol, 1)
     n_atoms = mol.GetNumAtoms()
     return 100*(n_O - 2*n_C - n_H/2)/n_atoms
@@ -150,8 +148,8 @@ def custom_oxy_balance(mol, w1=1, w2=0.3, w3=-0.6, w4=-1.8, w5=-1.9, w6=-0.5):
         ref: A.  R.  Martin  and  H.  J.  Yallop,  Trans.  Faraday  Soc.
                 54,  257(1958), URLhttp://dx.doi.org/10.1039/TF9585400257.
     '''
-    n_C = get_num_atom(mol,12)
-    n_N = get_num_atom(mol,14)
+    n_C = get_num_atom(mol,6)
+    n_N = get_num_atom(mol,7)
     n_H = get_num_atom(mol,1)
     n_O1 = get_num_with_neighs(mol, 'O', {'N': 1})
     n_O2 = get_num_with_neighs(mol, 'O', {'N': 1,'C': 1})
@@ -166,8 +164,8 @@ def return_atom_nums_modified_OB(mol):
         ref: A.  R.  Martin  and  H.  J.  Yallop,  Trans.  Faraday  Soc.
                 54,  257(1958), URLhttp://dx.doi.org/10.1039/TF9585400257.
     '''
-    n_C = get_num_atom(mol, 12)
-    n_N = get_num_atom(mol, 14)
+    n_C = get_num_atom(mol, 6)
+    n_N = get_num_atom(mol, 7)
     n_H = get_num_atom(mol, 1)
     n_F = get_num_atom(mol, 9)
     n_O1 = get_num_with_neighs(mol, 'O', {'N': 1})

@@ -121,7 +121,7 @@ def random_forest_feature_importance(x, y, feature_names, num_to_print='all', pr
     return sorted_feature_names, sorted_values
 
 #------------------------------------------------------------------------------------------
-def LASSO_feature_importance(x, y, feature_names, print_latex=False, num_to_print='all', alpha=.01):
+def LASSO_feature_importance(x, y, feature_names, print_latex=False, num_to_print='all', alpha=.001):
     """ Calculation of feature importance using coefficients in LASSO model.
         "least absolute shrinkage and selection operator"
         Required arguments:
@@ -295,7 +295,7 @@ def f_test(x, y, feature_names, p_cutoff = 0.05):
 
     #just keep non statistically significant scores at 0
     for i in range(num_features):
-        if (p_value[i] < p_cutoff):
+        if (p_values[i] < p_cutoff):
             scores[i] = raw_scores[i]
 
     return sort_scores(scores, feature_names)
@@ -338,7 +338,7 @@ def print_signed(coeff):
 
 
 #------------------------------------------------------------------------------------------
-def compare_feature_ranking_methods(x, y, feature_names, print_latex=True,
+def compare_feature_ranking_methods(x, y, feature_names, print_latex=True, alpha=.1,
                                     print_basic_table=False, num_to_print=10, return_dict=False):
     """
         compares a bunch of feature ranking methods, prints a latex table (optional) and then
@@ -346,14 +346,14 @@ def compare_feature_ranking_methods(x, y, feature_names, print_latex=True,
     """
     from collections import OrderedDict
     method = OrderedDict()
-    method['LASSO'] = LASSO_feature_importance(x, y, feature_names, alpha=.01)
-    method['LASSO stability selection'] = stability_selection_with_LASSO(x, y, feature_names, alpha=.005)
-    method['random forest variance score'] = random_forest_feature_importance(x, y, feature_names)
-    method['random forest shuffling'] = shuffle_importance(x, y, feature_names)
     method['Pearson correlation'] = pearson_correlation(x, y, feature_names)
-    method['$f$-test'] = mutual_information(x, y, feature_names)
-    method['MI'] = mutual_information(x, y, feature_names)
-    method['MIC'] = maximal_information_coefficient(x, y, feature_names)
+    #method['$f$-test'] = f_test(x, y, feature_names)
+    method['Mutual information'] = mutual_information(x, y, feature_names)
+    method['Maximal information criteria'] = maximal_information_coefficient(x, y, feature_names)
+    method['LASSO coefficient size'] = LASSO_feature_importance(x, y, feature_names)
+    method['LASSO stability selection'] = stability_selection_with_LASSO(x, y, feature_names, alpha=alpha)
+    method['Random forest variance score'] = random_forest_feature_importance(x, y, feature_names)
+    method['Random forest shuffling'] = shuffle_importance(x, y, feature_names)
 
     methods = list(method.keys())
     num_methods = len(methods)
@@ -375,7 +375,7 @@ def compare_feature_ranking_methods(x, y, feature_names, print_latex=True,
             print("cc|",end='')
         print('cc|}')
 
-        print(" &", end='')
+        print(" \\rotatebox{90}{ranking} &", end='')
         for i in range(num_methods-1):
             print("\\multicolumn{2}{c|}{\\rot{"+methods[i]+"}} & ", end='')
 

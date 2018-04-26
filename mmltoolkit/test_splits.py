@@ -21,6 +21,7 @@ def print_latex_row(name, scores_dict):
 
 #--------------------------------------------------------------------------------
 def test_splits(X, y, model, groups=None, print_latex=True, n_clusters=5, verbose=True):
+    """ test different CV splitting strategies (hyperparameters already set) """
 
     scores_dict_stratificaiton = test_and_plot(X , y,  model,
                             StratifiedShuffleSplit(n_splits=5),
