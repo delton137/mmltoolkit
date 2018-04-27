@@ -24,7 +24,7 @@ def grid_search(X, y, model, param_grid, name='', cv=KFold(n_splits=5,shuffle=Tr
 
 #------------------------------------------------------------------------
 def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_splits=5, shuffle=True),
-                         outer_cv=ShuffleSplit(), verbose=False, n_jobs=-1):
+                         outer_cv=ShuffleSplit(n_splits=20, test_size=0.2), verbose=False, n_jobs=-1):
     '''
         This is the standard "nested" CV scheme, where hyperparameter optimization is redone
         for each train_test split by splitting the train set further into train and validation sets.
@@ -34,16 +34,22 @@ def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_spl
     n_folds = outer_cv.get_n_splits()
 
     scores_dict = {'MAE' : 0, 'MAE_std' : 0, 'RMSE' : 0,
-                    'R2' : 0, 'rP' : 0, 'MAPE' : 0
+                    'R2' : 0, 'rP' : 0, 'MAPE' : 0,
                     'rP_train' : 0 , 'MAE_train' : 0 }
 
     MAEs = []
 
     for i in range(n_folds):
 
+        if (verbose):
+            print("doing outer fold", i+1, "of", n_folds)
+
         train, test = kf.split(X).__next__()
 
-        best_model = grid_search(X[train], y[train], model, param_grid, cv=inner_cv), n_jobs=-1)
+        best_model = grid_search(X[train], y[train], model, param_grid, cv=inner_cv, n_jobs=-1)
+
+        if (verbose):
+            print("best params: ", best_model.params_)
 
         best_model.fit(X[train], y[train])
 

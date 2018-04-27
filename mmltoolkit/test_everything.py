@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.model_selection import KFold, ShuffleSplit
-from .CV_tools import get_scorers_dict, grid_search
+from .CV_tools import get_scorers_dict, grid_search, nested_grid_search_CV
 from sklearn.dummy import DummyRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, Lasso, LinearRegression, ElasticNet, BayesianRidge
@@ -18,52 +18,55 @@ def make_models():
     ''' return dictionary with models and their corresponding parameter grids for hyperparameter optimizaiton '''
 
     model_dict = {
-            'KRR'   :{ 'model' : KernelRidge(),'param_grid' :  {"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -1, 100), "kernel" : ['rbf']}},
-            'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
-            'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
-            'Lasso' :{ 'model' : Lasso(max_iter = 20000), 'param_grid' : {"alpha": np.logspace(-2, 6, 100)}},
-            'BR'    :{ 'model' : BayesianRidge(), 'param_grid' : {"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}},
-            'GBoost':{ 'model' : GradientBoostingRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 350, 100).astype('int')}},
-            'RF'    :{ 'model' : RandomForestRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 100, 50).astype('int')}},
-            'kNN'   :{ 'model' : KNeighborsRegressor(), 'param_grid' : {"n_neighbors": np.linspace(2,20,18).astype('int')}},
-            'mean'  :{ 'model' : DummyRegressor(strategy='mean'), 'param_grid' : {}),
+            'KRR'   :{ 'model' : KernelRidge(),'param_grid' :  {"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -2, 100), "kernel" : ['rbf']}},
+            #'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
+            #'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
+            #'Lasso' :{ 'model' : Lasso(max_iter = 20000), 'param_grid' : {"alpha": np.logspace(-2, 6, 100)}},
+            #'BR'    :{ 'model' : BayesianRidge(), 'param_grid' : {"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}},
+            #'GBoost':{ 'model' : GradientBoostingRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 350, 100).astype('int')}},
+            #'RF'    :{ 'model' : RandomForestRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 100, 50).astype('int')}},
+            #'kNN'   :{ 'model' : KNeighborsRegressor(), 'param_grid' : {"n_neighbors": np.linspace(2,20,18).astype('int')}},
+            'mean'  :{ 'model' : DummyRegressor(strategy='mean'), 'param_grid' : {} },
             }
 
     return model_dict
 
 #----------------------------------------------------------------------------
 def make_CV_models(X, y):
-    '''performs grid searches to find best models for dataset X, y'''
+    '''performs grid searches to find all the best models for dataset X, y'''
 
     model_dict = {
             'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -1, 100), "kernel" : ['rbf']}),
-            #'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
-            #'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
-            #'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
-            #'BR'    : grid_search(X, y, BayesianRidge(), param_grid={"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}) ,
+            'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
+            'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
+            'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),
+            'BR'    : grid_search(X, y, BayesianRidge(), param_grid={"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}) ,
             'GBoost': grid_search(X, y, GradientBoostingRegressor(), param_grid={"n_estimators": np.linspace(5, 350, 100).astype('int')} ),
-            #'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 100, 50).astype('int')}, ),
-            #'kNN'   : grid_search(X, y, KNeighborsRegressor(), param_grid={"n_neighbors": np.linspace(2,20,18).astype('int')} ),
-            #'mean'  : DummyRegressor(strategy='mean'),
+            'RF'    : grid_search(X, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(5, 100, 50).astype('int')}, ),
+            'kNN'   : grid_search(X, y, KNeighborsRegressor(), param_grid={"n_neighbors": np.linspace(2,20,18).astype('int')} ),
+            'mean'  : DummyRegressor(strategy='mean'),
             }
 
     return model_dict
 
 
 #----------------------------------------------------------------------------
-def test_everything(data, featurization_dict, targets, cv=KFold(n_splits=5,shuffle=True), verbose=False, normalize=False ):
+def test_everything(data, featurization_dict, targets, inner_cv=KFold(n_splits=5,shuffle=True),
+                    outer_cv=ShuffleSplit(n_splits=20, test_size=0.2), verbose=False, normalize=False ):
     '''
         test all combinations of target variable, featurizations, and models
         by performing a gridsearch CV hyperparameter
         optimization for each combination and then CV scoring the best model.
 
         required args:
-            data : a pandas dataframe with the target data in columns
-            featurization_dict : a dictionary of the form {"featurization name" : X_featurization }
+            data : a pandas dataframe with data for the different targets in the columns
+            featurization_dict : a dictionary of the form {"featurization name" : X_featurization }, where X_featurization is the data array
             targets : a list of target names, corresponding to the columns in data
         important optional args:
-            cv : crossvalidation object specifying cross validation strategy for the **outer**
-                 cross validation loop. Typically we choose ShuffleSplit with a large # of splits.
+            outer_cv : crossvalidation object specifying cross validation strategy for the outer
+                     train-test CV loop. Typically we choose ShuffleSplit with a large # of splits.
+            inner_cv : crossvalidation object specifying cross validation strategy for the inner train-validation
+                     CV loop. K-fold with 5 folds is the standard.
         returns:
             results : a nested dictionary of the form
                      {target: { featurization_name: {model_name: scores_dict{ 'MAE': value, 'r2':value, etc }}}}
@@ -106,15 +109,15 @@ def test_everything(data, featurization_dict, targets, cv=KFold(n_splits=5,shuff
                 model = model_dict[modelname]['model']
                 param_grid = model_dict[modelname]['param_grid']
 
-                scores_dict = nested_grid_search_CV(X, y, model, param_grid,
+                scores_dict = nested_grid_search_CV(x, y, model, param_grid,
                                                     inner_cv=KFold(n_splits=5, shuffle=True),
-                                                    outer_cv=ShuffleSplit()):
+                                                    outer_cv=outer_cv, verbose=verbose)
 
                 modelresults[modelname] = scores_dict
 
-                if (relevant_scores["MAE"] < best_value):
+                if (scores_dict['MAE'] < best_value):
                     best[target]=[featurization, modelname]
-                    best_value = relevant_scores["MAE"]
+                    best_value = scores_dict["MAE"]
 
             featurizationresults[featurization] = modelresults
 

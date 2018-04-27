@@ -5,6 +5,7 @@
 """
 from rdkit import Chem
 from rdkit.Chem import Descriptors, AddHs
+from collections import defaultdict
 import numpy as np
 from rdkit.Chem.Descriptors import _descList
 from rdkit.ML.Descriptors.MoleculeDescriptors import MolecularDescriptorCalculator
@@ -36,8 +37,8 @@ def return_atom_nums(mol):
 
 
 def get_neigh_dict(atom):
-    '''returns a dictionary with the number of neighbors for a given atom of types C,N,H,O,F'''
-    neighs = {'N':0,'C':0,'O':0,'H':0,'F':0, '*':0}
+    '''returns a dictionary with the number of neighbors for a given atom'''
+    neighs = defaultdict(int)
     for atom in atom.GetNeighbors():
         neighs[atom.GetSymbol()] += 1
     return neighs
