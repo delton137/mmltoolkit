@@ -18,7 +18,7 @@ def make_models():
     ''' return dictionary with models and their corresponding parameter grids for hyperparameter optimizaiton '''
 
     model_dict = {
-            'KRR'   :{ 'model' : KernelRidge(),'param_grid' :  {"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -2, 100), "kernel" : ['rbf']}},
+            'KRR'   :{ 'model' : KernelRidge(), 'param_grid' : {"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -2, 100), "kernel" : ['rbf']}},
             #'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
             #'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
             #'Lasso' :{ 'model' : Lasso(max_iter = 20000), 'param_grid' : {"alpha": np.logspace(-2, 6, 100)}},
@@ -36,7 +36,7 @@ def make_CV_models(X, y):
     '''performs grid searches to find all the best models for dataset X, y'''
 
     model_dict = {
-            'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -1, 100), "kernel" : ['rbf']}),
+            'KRR'    : grid_search(X, y, KernelRidge(), param_grid={"alpha": np.logspace(-10, 2, 300), "gamma": np.logspace(-10, -1, 100), "kernel" : ['rbf']}),
             'SVR'   : grid_search(X, y, SVR(), param_grid={"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}),
             'Ridge' : grid_search(X, y, Ridge(), param_grid={"alpha": np.logspace(-6, 6, 150)} ),
             'Lasso' : grid_search(X, y, Lasso(max_iter = 20000), param_grid={"alpha": np.logspace(-2, 6, 100)} ),

@@ -1,4 +1,4 @@
-from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_validate, cross_val_score
+from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_val_score
 from sklearn.metrics import make_scorer
 from sklearn.kernel_ridge import KernelRidge
 from collections import defaultdict
@@ -49,7 +49,10 @@ def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_spl
         best_model = grid_search(X[train], y[train], model, param_grid, cv=inner_cv, n_jobs=-1)
 
         if (verbose):
-            print("best params: ", best_model.params_)
+            try:
+                print("best params: ", best_model.get_params())
+            except:
+                print("couldn't get parameters")
 
         best_model.fit(X[train], y[train])
 
