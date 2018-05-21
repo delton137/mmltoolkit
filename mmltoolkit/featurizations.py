@@ -1,7 +1,7 @@
 """
 Note : currently the Coulomb Matrix and Bag of Bonds functions take .xyz filenames as inputs
        in the future, they could be rewritten to work on RDKit mol objects, like the rest of the
-       featurization functions. 
+       featurization functions.
 """
 import numpy as np
 import copy
@@ -14,7 +14,7 @@ from collections import defaultdict
 from .fingerprints import truncated_Estate_featurizer
 from .descriptors import RDKit_descriptor_featurizer
 from .functional_group_featurizer import functional_group_featurizer
-atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9 }
+atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9, 'Cl': 17, 'S': 16 }
 
 #----------------------------------------------------------------------------
 def bag_of_bonds(filename_list, verbose=False):
@@ -424,7 +424,7 @@ def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=
     names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)
 
     if (return_names):
-        return X_scaled, names_all
+        return names_all, X_scaled
     else:
         return X_scaled
 
@@ -441,7 +441,7 @@ def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], retu
     names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)+list(names_fun)
 
     if (return_names):
-        return X_scaled, names_all
+        return names_all, X_scaled
     else:
         return X_scaled
 
@@ -455,12 +455,14 @@ def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descripto
 
     if verbose: print("number of RDKit descriptors used : %i" % (len(names_RDkit)))
 
+    print(X_RDKit.shape, X_CDS.shape, X_LBoB.shape, X_Estate.shape, X_fun.shape)
+
     X_combined = np.concatenate((X_RDKit, X_CDS, X_LBoB, X_Estate, X_fun), axis=1)
     X_scaled = StandardScaler().fit_transform(X_combined)
 
     names_all = list(names_RDkit)+list(names_LBoB)+list(names_CDS)+list(names_Estate)+list(names_fun)
 
     if (return_names):
-        return X_scaled, names_all
+        return names_all, X_scaled
     else:
         return X_scaled
