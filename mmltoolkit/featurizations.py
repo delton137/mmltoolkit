@@ -392,7 +392,7 @@ def characteristic_poly(mol_list, useBO=False):
     return np.array(eigenvalue_list)
 
 #----------------------------------------------------------------------------
-def CDS_featurizer(mol_list, return_names = False):
+def CDS_featurizer(mol_list, return_names=True):
     from .descriptors import custom_descriptor_set
     X_CDS = []
     for mol in mol_list:
@@ -409,7 +409,7 @@ def CDS_featurizer(mol_list, return_names = False):
         return X
 
 #----------------------------------------------------------------------------
-def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=False):
+def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=True):
 
     if (isinstance(mol_list, list) == False):
         mol_list = [mol_list]
@@ -429,7 +429,7 @@ def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=
         return X_scaled
 
 #----------------------------------------------------------------------------
-def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], return_names= True, verbose=False):
+def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], return_names=True, verbose=False):
     names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
     names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
     names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
@@ -454,8 +454,6 @@ def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descripto
     names_fun, X_fun = functional_group_featurizer(mol_list)
 
     if verbose: print("number of RDKit descriptors used : %i" % (len(names_RDkit)))
-
-    print(X_RDKit.shape, X_CDS.shape, X_LBoB.shape, X_Estate.shape, X_fun.shape)
 
     X_combined = np.concatenate((X_RDKit, X_CDS, X_LBoB, X_Estate, X_fun), axis=1)
     X_scaled = StandardScaler().fit_transform(X_combined)

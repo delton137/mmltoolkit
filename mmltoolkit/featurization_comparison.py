@@ -2,13 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold, ShuffleSplit
-from .CV_tools import grid_search, get_scorers_dict
+from .CV_tools import grid_search, get_scorers_dict, nested_grid_search_CV
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, Lasso, LinearRegression, BayesianRidge
 
 
 #----------------------------------------------------------------------------
-def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuffle=True),
+def test_featurizations_and_plot(featurization_dict, y, inner_cv=KFold(n_splits=5,shuffle=True),
+                                outer_cv=ShuffleSplit(n_splits=20, test_size=0.2),
                                 make_plots=False, save_plot=False, verbose=False, target_prop_name='',
                                 units = '', make_combined_plot=False):
     ''' test a bunch of models and print out a sorted list of CV accuracies
@@ -48,30 +49,35 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             x = x.reshape(-1,1)
 
         #------ model selection & grid search ----
-        grid = np.concatenate([np.logspace(-14, -2, 12),np.logspace(-2, 2, 200)])
-        KR_grid = {"alpha": np.logspace(-16, -2, 50),
-                         "gamma": np.logspace(-15, -6, 10),
-                        "kernel" : ['rbf','laplacian']}
+        #------ older method - not nested CV
+        #grid = np.concatenate([np.logspace(-14, -2, 12),np.logspace(-2, 2, 200)])
+        #KR_grid = {"alpha": np.logspace(-16, -2, 50),
+        #                 "gamma": np.logspace(-15, -6, 10),
+        #                "kernel" : ['rbf','laplacian']}
         #model = grid_search(x, y, Lasso(), cv=cv, param_grid={"alpha": grid }, verbose=True)
-        model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
+        #model = grid_search(x, y, KernelRidge(), param_grid=KR_grid, verbose = True)
         #model = KernelRidge(**{'alpha': 9.8849590466255858e-11, 'gamma': 1.7433288221999873e-11, 'kernel': 'rbf'})
         #model = grid_search(x, y,SVR(), param_grid={"C": np.logspace(-1, 3, 40), "epsilon": np.logspace(-2, 1, 40)}, name = "SVR", verbose=True, cv=cv)
         #model = grid_search(x, y, RandomForestRegressor(), param_grid={"n_estimators": np.linspace(10, 50,5).astype('int')}, verbose=True)
         #model = BayesianRidge()
+        #scores_dict = cross_validate(model, x, y, cv=cv, n_jobs=-1, scoring=scorers_dict, return_train_score=True)
 
-        scorers_dict = get_scorers_dict()
+        model = KernelRidge()
+        param_grid =  {"alpha": np.logspace(-15, 2, 200), "gamma": np.logspace(-15, -2, 50), "kernel" : ['rbf']}
 
-        scores_dict = cross_validate(model, x, y, cv=cv, n_jobs=-1, scoring=scorers_dict, return_train_score=True)
-        RMSE[name] = np.sqrt(-1*scores_dict['test_RMSE'].mean())
-        mean_MAPE[name] = -1*scores_dict['test_MAPE'].mean()
-        mean_abs_err_train[name] = -1*scores_dict['train_abs_err'].mean()
-        mean_abs_err[name] = -1*scores_dict['test_abs_err'].mean()
-        std_abs_err_train[name] = np.std(-1*scores_dict['train_abs_err'])
-        std_abs_err[name] = np.std(-1*scores_dict['test_abs_err'])
-        mean_R2test[name] = scores_dict['test_R2'].mean()
-        mean_R2train[name] = scores_dict['train_R2'].mean()
-        mean_rPtrain[name] = scores_dict['train_rP'].mean()
-        mean_rPtest[name] = scores_dict['test_rP'].mean()
+        scores_dict = nested_grid_search_CV(x, y, model, param_grid, inner_cv=inner_cv,
+                                            outer_cv=outer_cv, verbose=verbose)
+
+        RMSE[name] = np.sqrt(-1*scores_dict['RMSE'].mean())
+        mean_MAPE[name] = -1*scores_dict['MAPE'].mean()
+        mean_abs_err_train[name] = -1*scores_dict['MAE_train'].mean()
+        mean_abs_err[name] = -1*scores_dict['MAE'].mean()
+        std_abs_err_train[name] = np.std(-1*scores_dict['MAE_std_train'])
+        std_abs_err[name] = np.std(-1*scores_dict['MAE_std'])
+        mean_R2test[name] = scores_dict['R2'].mean()
+        mean_R2train[name] = scores_dict['R2_train'].mean()
+        mean_rPtrain[name] = scores_dict['rP_train'].mean()
+        mean_rPtest[name] = scores_dict['rP'].mean()
         model_dict[name] = model
 
 
@@ -92,7 +98,7 @@ def test_featurizations_and_plot(featurization_dict, y, cv=KFold(n_splits=5,shuf
             label=r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(mean_abs_err[name])+units+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(mean_rPtest[name])
             plt.text(.045, .85, label, fontsize = 21, transform=ax.transAxes)
 
-            kf = cv
+            kf = outer_cv
             train, test = kf.split(x).__next__() #first in the generator
             model.fit(x[train], y[train])
             y_pred_test = model.predict(x[test])

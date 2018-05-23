@@ -17,13 +17,13 @@ def make_models():
     ''' return dictionary with models and their corresponding parameter grids for hyperparameter optimizaiton '''
 
     model_dict = {
-            #'KRR'   :{ 'model' : KernelRidge(), 'param_grid' : {"alpha": np.logspace(-15, 2, 300), "gamma": np.logspace(-15, -2, 100), "kernel" : ['rbf']}},
-            'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
-            'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
+            'KRR'   :{ 'model' : KernelRidge(), 'param_grid' : {"alpha": np.logspace(-14, 2, 200), "gamma": np.logspace(-14, -2, 100), "kernel" : ['rbf']}},
+            #'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
+            #'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
             #'Lasso' :{ 'model' : Lasso(max_iter = 20000), 'param_grid' : {"alpha": np.logspace(-2, 6, 100)}},
             #'BR'    :{ 'model' : BayesianRidge(), 'param_grid' : {"alpha_1": np.logspace(-13,-5,10),"alpha_2": np.logspace(-9,-3,10), "lambda_1": np.logspace(-10,-5,10),"lambda_2": np.logspace(-11,-4,10)}},
             #'GBoost':{ 'model' : GradientBoostingRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 350, 100).astype('int')}},
-            'RF'     :{ 'model' : RandomForestRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 100, 50).astype('int')}},
+            #'RF'     :{ 'model' : RandomForestRegressor(), 'param_grid' : {"n_estimators": np.linspace(5, 100, 50).astype('int')}},
             #'kNN'   :{ 'model' : KNeighborsRegressor(), 'param_grid' : {"n_neighbors": np.linspace(2,20,18).astype('int')}},
             #'mean'  :{ 'model' : DummyRegressor(strategy='mean'), 'param_grid' : {} },
             }
@@ -91,6 +91,8 @@ def test_everything(data, featurization_dict, targets, inner_cv=KFold(n_splits=5
             if (verbose): print("    testing featurization %s" % featurization)
 
             x = featurization_dict[featurization]
+
+            x = np.array(x)
 
             if (x.ndim == 1):
                 x = x.reshape(-1,1)

@@ -33,11 +33,10 @@ def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_spl
     kf = outer_cv
     n_folds = outer_cv.get_n_splits()
 
-    scores_dict = {'MAE' : 0, 'MAE_std' : 0, 'RMSE' : 0,
-                    'R2' : 0, 'rP' : 0, 'MAPE' : 0,
-                    'rP_train' : 0 , 'MAE_train' : 0 }
+    scores_dict = defaultdict(lambda: 0)
 
     MAEs = []
+    MAEs_train = []
 
     for i in range(n_folds):
 
@@ -63,18 +62,21 @@ def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_spl
         y_true_train = y[train]
 
         MAEs += [mean_absolute_error(y_true, y_pred)]
-        scores_dict['MAE_train'] += mean_absolute_error(y_true_train, y_pred_train)
+        MAEs_train += [mean_absolute_error(y_true_train, y_pred_train)]
         scores_dict['RMSE'] += root_mean_squared_error(y_true, y_pred)
         scores_dict['R2']   += R2(y_true, y_pred)
+        scores_dict['R2_train']   += R2(y_true_train, y_pred_train)
         scores_dict['rP']   += rPearson(y_true, y_pred)
         scores_dict['rP_train'] += rPearson(y_true_train, y_pred_train)
         scores_dict['MAPE'] += mean_absolute_percentage_error(y_true, y_pred)
 
     scores_dict['MAE']   = np.mean(MAEs)
     scores_dict['MAE_std'] = np.std(MAEs)
-    scores_dict['MAE_train'] = scores_dict['MAE_train']/n_folds
+    scores_dict['MAE_train'] =np.mean(MAEs_train)
+    scores_dict['MAE_std_train'] = np.std(MAEs_train)
     scores_dict['RMSE'] = scores_dict['RMSE']/n_folds
     scores_dict['R2']   = scores_dict['R2']/n_folds
+    scores_dict['R2_train']   = scores_dict['R2_train']/n_folds
     scores_dict['rP']   = scores_dict['rP']/n_folds
     scores_dict['rP_train'] = scores_dict['rP_train']/n_folds
     scores_dict['MAPE'] = scores_dict['MAPE']/n_folds
