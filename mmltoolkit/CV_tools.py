@@ -81,7 +81,7 @@ def nested_grid_search_CV(X, y, model, param_grid, name='', inner_cv=KFold(n_spl
     scores_dict['rP_train'] = scores_dict['rP_train']/n_folds
     scores_dict['MAPE'] = scores_dict['MAPE']/n_folds
 
-    return scores_dict
+    return dict(scores_dict)
 
 #------------------------------------------------------------------------
 def mean_absolute_percentage_error(y_true, y_pred):

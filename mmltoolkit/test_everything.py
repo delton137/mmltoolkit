@@ -17,7 +17,7 @@ def make_models():
     ''' return dictionary with models and their corresponding parameter grids for hyperparameter optimizaiton '''
 
     model_dict = {
-            'KRR'   :{ 'model' : KernelRidge(), 'param_grid' : {"alpha": np.logspace(-14, 2, 200), "gamma": np.logspace(-14, -2, 100), "kernel" : ['rbf']}},
+            'KRR'   :{ 'model' : KernelRidge(), 'param_grid' : {"alpha": np.logspace(-15, 2, 200), "gamma": np.logspace(-14, -1, 100), "kernel" : ['rbf']}},
             #'SVR'   :{ 'model' : SVR(), 'param_grid' : {"C": np.logspace(-1, 4, 20), "epsilon": np.logspace(-2, 2, 20)}},
             #'Ridge' :{ 'model' : Ridge(), 'param_grid' : {"alpha": np.logspace(-6, 6, 150)}},
             #'Lasso' :{ 'model' : Lasso(max_iter = 20000), 'param_grid' : {"alpha": np.logspace(-2, 6, 100)}},
@@ -124,7 +124,7 @@ def test_everything(data, featurization_dict, targets, inner_cv=KFold(n_splits=5
 
         results[target] = featurizationresults
 
-    return (results, best)
+    return (dict(results), dict(best)) #convert defaultdict to dict
 
 
 target_short_names = {
