@@ -266,12 +266,15 @@ def sum_over_bonds(mol_list, predefined_bond_types=[], return_names=True):
     Returns:
         bond_types : a list of strings describing the bond types in the feature vector
         X_LBoB : a NumPy array containing the feature vectors of shape (num_mols, num_bond_types)
+
+    TODO: This code could be cleaned up substantially since we are using defaultdict now.
+          <DCE 2018-06-12>
     '''
 
     if (isinstance(mol_list, list) == False):
         mol_list = [mol_list]
 
-    empty_bond_dict = {}
+    empty_bond_dict = defaultdict(lambda : 0)
     num_mols = len(mol_list)
 
     if (len(predefined_bond_types) == 0 ):
@@ -286,10 +289,7 @@ def sum_over_bonds(mol_list, predefined_bond_types=[], return_names=True):
                 if (bond_type == ''):
                     bond_type = "-"
                 bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
-                try:
-                    empty_bond_dict[bond_string] = 0
-                except KeyError:
-                    empty_base_bond_dict[bond_string] = 0
+                empty_bond_dict[bond_string] = 0
     else:
         for bond_string in predefined_bond_types:
             empty_bond_dict[bond_string] = 0
@@ -317,6 +317,7 @@ def sum_over_bonds(mol_list, predefined_bond_types=[], return_names=True):
                 bond_string = min(bond_atoms)+bond_type+max(bond_atoms)
                 bond_dict[bond_string] += 1
 
+        #at the end, pick out only the relevant ones
         X_LBoB[i,:] = [bond_dict[bond_type] for bond_type in bond_types]
 
     if (return_names):
