@@ -79,13 +79,18 @@ def oxygen_balance_1600(mol):
     return 1600*(n_O - 2*n_C - n_H/2)/mol_weight
 
 
-def oxygen_balance_100(mol):
+def oxygen_balance_100(mol, scaled=False):
     '''returns the OB_100 descriptor'''
     n_O = get_num_atom(mol, 8)
     n_C = get_num_atom(mol, 6)
     n_H = get_num_atom(mol, 1)
     n_atoms = mol.GetNumAtoms()
-    return 100*(n_O - 2*n_C - n_H/2)/n_atoms
+    OB_100 = 100*(n_O - 2*n_C - n_H/2)/n_atoms
+
+    if scaled:
+        return (OB_100 + 28.5)/18.96 + 1.0 ## rescales to center around one with unit variance based on statistics of the combined energetics dataset
+    else:
+        return OB_100
 
 def return_combined_nums(mol):
     return custom_descriptor_set(mol)
@@ -107,7 +112,7 @@ def custom_descriptor_set(mol):
     else:
         NCratio = n_N/n_C
 
-    return [oxygen_balance_100(mol), n_C, n_N, n_O1, n_O2, n_O3, n_O4, n_H, n_F, NCratio,
+    return [oxygen_balance_100(mol, scaled=True), n_C, n_N, n_O1, n_O2, n_O3, n_O4, n_H, n_F, NCratio,
                 get_num_with_neighs(mol, 'N', {'O': 2, 'C': 1}) ,  #CNO2
                 get_num_with_neighs(mol, 'N', {'O': 2, 'N': 1}) ,  #NNO2
                 get_num_with_neighs(mol, 'N', {'O': 2})         ,  #ONO

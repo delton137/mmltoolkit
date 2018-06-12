@@ -256,7 +256,7 @@ def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
     return sum_over_bonds(mol_list, predefined_bond_types=predefined_bond_types)
 
 #----------------------------------------------------------------------------
-def sum_over_bonds(mol_list, predefined_bond_types=[]):
+def sum_over_bonds(mol_list, predefined_bond_types=[], return_names=True):
     '''
         Note: Bond types are labeled according convention where the atom of the left is alphabetically less than
         the atom on the right. For instance, 'C=O' and 'O=C' bonds are lumped together under 'C=O', and NOT 'O=C'.
@@ -319,7 +319,10 @@ def sum_over_bonds(mol_list, predefined_bond_types=[]):
 
         X_LBoB[i,:] = [bond_dict[bond_type] for bond_type in bond_types]
 
-    return bond_types, X_LBoB
+    if (return_names):
+        return bond_types, X_LBoB
+    else:
+        return X_LBoB
 
 #----------------------------------------------------------------------------
 def adjacency_matrix_eigenvalues(mol_list, useBO=False):
@@ -410,6 +413,10 @@ def CDS_featurizer(mol_list, return_names=True):
 
 #----------------------------------------------------------------------------
 def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=True):
+    return Estate_CDS_SoB_featurizer(mol_list, predefined_bond_types=predefined_bond_types, return_names=return_names)
+
+#----------------------------------------------------------------------------
+def Estate_CDS_SoB_featurizer(mol_list, predefined_bond_types=[], return_names=True, scaled=True):
 
     if (isinstance(mol_list, list) == False):
         mol_list = [mol_list]
@@ -419,7 +426,11 @@ def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=
     names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
 
     X_combined = np.concatenate((X_Estate, X_CDS, X_LBoB), axis=1)
-    X_scaled = StandardScaler().fit_transform(X_combined)
+
+    if scaled:
+        X_scaled = StandardScaler().fit_transform(X_combined)
+    else:
+        X_scaled = X_combined
 
     names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)
 
@@ -429,14 +440,18 @@ def Estate_CDS_LBoB_featurizer(mol_list, predefined_bond_types=[], return_names=
         return X_scaled
 
 #----------------------------------------------------------------------------
-def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], return_names=True, verbose=False):
+def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], return_names=True, verbose=False, scaled=True):
     names_Estate, X_Estate = truncated_Estate_featurizer(mol_list, return_names=True )
     names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
     names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
     names_fun, X_fun = functional_group_featurizer(mol_list)
 
     X_combined = np.concatenate((X_Estate, X_CDS, X_LBoB, X_fun), axis=1)
-    X_scaled = StandardScaler().fit_transform(X_combined)
+
+    if scaled:
+        X_scaled = StandardScaler().fit_transform(X_combined)
+    else:
+        X_scaled = X_combined
 
     names_all = list(names_Estate)+list(names_CDS)+list(names_LBoB)+list(names_fun)
 
@@ -446,7 +461,7 @@ def Estate_CDS_LBoB_fungroup_featurizer(mol_list, predefined_bond_types=[], retu
         return X_scaled
 
 #----------------------------------------------------------------------------
-def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descriptor_list=_descList, return_names = True, verbose=False):
+def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descriptor_list=_descList, return_names = True, verbose=False, scaled=True):
     names_RDkit, X_RDKit = RDKit_descriptor_featurizer(mol_list, descriptor_list=rdkit_descriptor_list)
     names_LBoB, X_LBoB = literal_bag_of_bonds(mol_list, predefined_bond_types=predefined_bond_types)
     names_CDS, X_CDS = CDS_featurizer(mol_list, return_names=True)
@@ -456,7 +471,11 @@ def all_descriptors_combined(mol_list, predefined_bond_types=[], rdkit_descripto
     if verbose: print("number of RDKit descriptors used : %i" % (len(names_RDkit)))
 
     X_combined = np.concatenate((X_RDKit, X_CDS, X_LBoB, X_Estate, X_fun), axis=1)
-    X_scaled = StandardScaler().fit_transform(X_combined)
+
+    if scaled:
+        X_scaled = StandardScaler().fit_transform(X_combined)
+    else:
+        X_scaled = X_combined
 
     names_all = list(names_RDkit)+list(names_LBoB)+list(names_CDS)+list(names_Estate)+list(names_fun)
 

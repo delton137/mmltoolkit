@@ -1,4 +1,4 @@
-from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_val_score
+from sklearn.model_selection import KFold, ShuffleSplit, GridSearchCV, cross_val_score, cross_validate
 from sklearn.metrics import make_scorer
 from sklearn.kernel_ridge import KernelRidge
 from collections import defaultdict
@@ -170,12 +170,11 @@ def test_model_cv(model, x, y, cv=KFold(n_splits=5,shuffle=True)):
 
 
 #--------------------------------------------------------------------
-def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=True, verbose=False):
+def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=True, verbose=False,
+                        KR_grid = {"alpha": np.logspace(-14, 2, 100),
+                                   "gamma": np.logspace(-14, 1, 50),
+                                   "kernel" : ['rbf']} ):
     if (do_grid_search):
-        KR_grid = {"alpha": np.logspace(-16, -2, 10),
-                   "gamma": np.logspace(-15, -6, 10),
-                   "kernel" : ['rbf','laplacian']}
-
         model = grid_search(X, y, KernelRidge(), param_grid=KR_grid, verbose=verbose)
     else:
         model = KernelRidge()
@@ -183,7 +182,7 @@ def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=Tru
     scorers_dict = get_scorers_dict()
     scores_dict = cross_validate(model, X, y, cv=cv, n_jobs=-1, scoring=scorers_dict, return_train_score=True)
 
-    return scores_dict
+    return model, scores_dict
 
 
 #--------------------------------------------------------------------
