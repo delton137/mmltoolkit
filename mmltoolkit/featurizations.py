@@ -182,6 +182,47 @@ def summed_bag_of_bonds(filename):
 
     return feature_names, BoB_list
 
+
+#----------------------------------------------------------------------------
+def coulombmat_eigenvalues_from_coords(atom_types, coords, padded_size):
+    """
+    returns sorted Coulomb matrix eigenvalues
+    Args:
+        atom_types : a list of atom types (single characters)
+        coords : the coords as a (num_atoms x 3) numpy array
+        padded_size : the number of atoms in the biggest molecule to be considered
+                     anything smaller will have zeros padded to the eigenvalue list
+    Returns:
+        Cmat_eigenvalues : as a Numpy array
+    """
+    atom_num_dict = {'C':6,'N':7,'O':8,'H':1,'F':9, 'Cl': 17, 'S': 16 }
+
+    num_atoms = len(atom_types)
+
+    Cmat = np.zeros((num_atoms,num_atoms))
+
+    chargearray = np.zeros((num_atoms, 1))
+
+    chargearray = [atom_num_dict[str(symbol,'utf-8')] for symbol in atom_types]
+
+    for i in range(num_atoms):
+        for j in range(num_atoms):
+            if i == j:
+                Cmat[i,j] = 0.5*chargearray[i]**2.4   # Diagonal terms
+            else:
+                dist = np.linalg.norm(coords[i,:] - coords[j,:])
+                Cmat[i,j] = chargearray[i]*chargearray[j]/dist   #Pair-wise repulsion
+
+    Cmat_eigenvalues = np.linalg.eigvals(Cmat)
+
+    # Cmat_eigenvalues = sorted(Cmat_eigenvalues, reverse=True) #sort (should be default)
+
+    pad_width = padded_size - num_atoms
+    Cmat_eigenvalues = np.pad(Cmat_eigenvalues, ((0, pad_width)), mode='constant')
+
+    return Cmat_eigenvalues
+
+
 #----------------------------------------------------------------------------
 def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
     """
@@ -205,13 +246,13 @@ def coulombmat_and_eigenvalues_as_vec(filename, padded_size, sort=True):
     for i in range(num_atoms_file):
         for j in range(num_atoms_file):
             if i == j:
-                Cmat[i,j]=0.5*chargearray[i]**2.4   # Diagonal term described by Potential energy of isolated atom
+                Cmat[i,j]=0.5*chargearray[i]**2.4   # Diagonal terms
             else:
                 dist=np.linalg.norm(xyzmatrix[i,:] - xyzmatrix[j,:])
                 Cmat[i,j]=chargearray[i]*chargearray[j]/dist   #Pair-wise repulsion
 
     Cmat_eigenvalues = np.linalg.eigvals(Cmat)
-    #print(Cmat_eigenvalues)
+
     if (sort): Cmat_eigenvalues = sorted(Cmat_eigenvalues, reverse=True) #sort
 
     Cmat_as_vec = []
@@ -258,9 +299,9 @@ def literal_bag_of_bonds(mol_list, predefined_bond_types=[]):
 #----------------------------------------------------------------------------
 def sum_over_bonds(mol_list, predefined_bond_types=[], return_names=True):
     '''
+        "Sum over bonds" aka "literal bag of bonds" aka "bond counting featurization"
         Note: Bond types are labeled according convention where the atom of the left is alphabetically less than
         the atom on the right. For instance, 'C=O' and 'O=C' bonds are lumped together under 'C=O', and NOT 'O=C'.
-
     Args:
         mol_list : a single mol object or list/iterable containing the RDKit mol objects for all of the molecules.
     Returns:
@@ -334,8 +375,7 @@ def adjacency_matrix_eigenvalues(mol_list, useBO=False):
     for mol in mol_list:
         adj_matrix = GetAdjacencyMatrix(mol, useBO=useBO)
         evs = np.linalg.eigvals(adj_matrix)
-        evs = np.real(evs)
-        evs = sorted(evs, reverse=True) #sort
+        #evs = sorted(evs, reverse=True) #sort
         eigenvalue_list += [evs]
         length = len(evs)
         if (length > max_length):

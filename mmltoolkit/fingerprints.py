@@ -36,8 +36,8 @@ class fingerprint():
         #self.x = st.fit_transform(self.x)
 
 def truncated_Estate_featurizer(mol_list, return_names=False):
-
-    X = np.array([FingerprintMol(RemoveHs(mol))[0][6:37] for mol in mol_list])
+    
+    X = np.array([FingerprintMol(mol)[0][6:37] for mol in mol_list])
     Estate_names=['-CH3', '=CH2', '—CH2—', '\\#CH', '=CH-', 'aCHa', '>CH-', '=c=', '\\#C-', '=C$<$', 'aCa',
     'aaCa', '$>$C$<$', '-NH3[+1]', '-NH2', '-NH2-[+1]', '=NH', '-NH-', 'aNHa', '\\#N', '$>$NH-[+1]',
     '=N—', 'aNa', '$>$N—', '—N$<$$<$', 'aaNs', '$>$N$<$[+1]', '-OH', '=0', '-0-', 'aOa']

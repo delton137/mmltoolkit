@@ -98,13 +98,14 @@ diazine
 
 def functional_group_featurizer(mol_list, drop_empty_features=True):
     """
+    Counts the number of different types of functional groups, where functional groups
+    are specified by the SMARTS strings listed in fun_group_string
 
     Arguments:
-        mol_list :: a list of rdkit mol objects
+        mol_list :: a list of RDkit mol objects
 
     Returns:
          (X, fun_names) :: as a NumPy array and a list
-
     """
 
     lines_to_process = fun_group_string.splitlines()
