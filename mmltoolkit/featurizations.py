@@ -374,7 +374,7 @@ def adjacency_matrix_eigenvalues(mol_list, useBO=False):
 
     for mol in mol_list:
         adj_matrix = GetAdjacencyMatrix(mol, useBO=useBO)
-        evs = np.linalg.eigvals(adj_matrix)
+        evs = list(np.linalg.eigvals(adj_matrix))
         #evs = sorted(evs, reverse=True) #sort
         eigenvalue_list += [evs]
         length = len(evs)

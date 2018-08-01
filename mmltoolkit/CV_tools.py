@@ -168,11 +168,10 @@ def test_model_cv(model, x, y, cv=KFold(n_splits=5,shuffle=True)):
 
     return scores.mean()
 
-
 #--------------------------------------------------------------------
 def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=True, verbose=False,
                         KR_grid = {"alpha": np.logspace(-14, 2, 100),
-                                   "gamma": np.logspace(-14, 1, 50),
+                                   "gamma": np.logspace(-14, 2, 100),
                                    "kernel" : ['rbf']} ):
     if (do_grid_search):
         model = grid_search(X, y, KernelRidge(), param_grid=KR_grid, verbose=verbose)
@@ -187,7 +186,6 @@ def tune_KR_and_test(X, y, cv=KFold(n_splits=5,shuffle=True), do_grid_search=Tru
 
 #--------------------------------------------------------------------
 def test_and_plot(X, y, model, splitter=ShuffleSplit(n_splits=5), groups=None, units='', property_name='', display_plot = True, plot_title='', savefig=False, filename=''):
-
 
 
     scorers_dict = get_score_functions_dict()
@@ -219,7 +217,7 @@ def test_and_plot(X, y, model, splitter=ShuffleSplit(n_splits=5), groups=None, u
         plt.clf()
         plt.xlabel('Actual '+property_name,fontsize=19)
         plt.ylabel('Predicted '+property_name, fontsize=19)
-        MAE_test = 10**MAE_test
+        #MAE_test = 10**MAE_test
         if (units == ''):
             label=plot_title+'\n'+r'$\langle$MAE$\rangle$ (test) = '+" %4.2f "%(MAE_test)+"\n"+r'$\langle r\rangle$ (test) = %4.2f'%(r_test)
         else:
