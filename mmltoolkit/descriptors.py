@@ -12,10 +12,6 @@ from rdkit.ML.Descriptors.MoleculeDescriptors import MolecularDescriptorCalculat
 
 
 
-
-
-
-
 def get_num_atom(mol, atomic_number):
     '''returns the number of atoms of particular atomic number'''
     num = 0
@@ -183,9 +179,9 @@ def return_atom_nums_modified_OB(mol):
 
 
 def RDKit_descriptor_featurizer(mol_list, descriptor_list=_descList, return_names=True):
-    num_descriptors = len( descriptor_list)
+    num_descriptors = len(descriptor_list)
     num_mols = len(mol_list)
-    descriptor_function_names = [_descList[i][0] for i in range(num_descriptors)]
+    descriptor_function_names = [descriptor_list[i][0] for i in range(num_descriptors)]
 
     mdc = MolecularDescriptorCalculator(simpleList=descriptor_function_names)
 
